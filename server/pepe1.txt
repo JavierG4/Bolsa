@@ -1,0 +1,16 @@
+[dotenv@17.2.3] injecting env (4) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+Fourth request
+{
+  'Global Quote': {
+    '01. symbol': 'IBM',
+    '02. open': '306.8200',
+    '03. high': '309.9400',
+    '04. low': '304.2300',
+    '05. price': '309.1300',
+    '06. volume': '2975188',
+    '07. latest trading day': '2025-11-10',
+    '08. previous close': '304.7239',
+    '09. change': '4.4061',
+    '10. change percent': '1.4459%'
+  }
+}
