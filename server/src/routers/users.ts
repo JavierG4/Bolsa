@@ -19,31 +19,52 @@ export const usersRouter = express.Router();
  * @returns 409 - Conflict (user with the same userName already exists)
  * @returns 500 - Server error
  */
-usersRouter.post('/users', async (req, res) => {
-  if(!req.body) {
-    res.status(400).send('User data must be provided in the request body');
-    return;
-  }
-  try {
-    const user = new UserModel(req.body);
-    const filter = req.body.userName ? { userName: req.body.userName } : {};
-    const existingUser = await UserModel.find(filter);
-    if (existingUser.length !== 0) {
-      res.status(409).send('User with this userName already exists');
-    } else {
-      await user.save();
-      res.status(201).send(user);
-    }
-  } catch (err) {
-    res.status(500).send({error: err.message});
-  }
-});
+// usersRouter.post('/users', async (req, res) => {
+//   if(!req.body) {
+//     res.status(400).send('User data must be provided in the request body');
+//     return;
+//   }
+//   try {
+//     const user = new UserModel(req.body);
+//     const filter = req.body.userName ? { userName: req.body.userName } : {};
+//     const existingUser = await UserModel.find(filter);
+//     if (existingUser.length !== 0) {
+//       res.status(409).send('User with this userName already exists');
+//     } else {
+//       await user.save();
+//       res.status(201).send(user);
+//     }
+//   } catch (err) {
+//     res.status(500).send({error: err.message});
+//   }
+// });
 
 usersRouter.post('/logout', (req, res) => {
   return res.clearCookie('access_token').
   clearCookie('refresh_token').
   status(200).send('Logged out successfully');
 })
+
+/**
+ * @route GET /users
+ * @summary Get the authenticated user's profile
+ * @returns 200 - User profile found
+ * @returns 404 - User not found
+ * @returns 500 - Server error
+ */
+usersRouter.get('/users', async (req, res) => {
+  try {
+    const userId: string = (req as any).user.userId;
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      res.status(404).send();
+    } else {
+      res.status(200).send(user);
+    }
+  } catch (err) {
+    res.status(500).send({error: err.message});
+  }
+});
 
 /**
  * @route GET /users/:id
@@ -112,57 +133,6 @@ usersRouter.delete('/users/:id', async (req, res) => {
       res.status(404).send();
     } else {
       res.status(200).send(user);
-    }
-  } catch (err) {
-    res.status(500).send({error: err.message});
-  }
-});
-
-/**
- * @route GET /users/:id/settings
- * @summary Get user settings by ID
- * @param req.params.id - User ID
- * @returns 200 - User settings found
- * @returns 400 - Bad request (missing user data)
- * @returns 404 - User not found
- * @returns 500 - Server error
- */
-usersRouter.get('/users/:id/settings', async (req, res) => {
-  try {
-    const user = await UserModel.findById(req.params.id);
-    if (!user) {
-      res.status(404).send();
-    } else {
-      res.status(200).send(user.settings);
-    }
-  } catch (err) {
-    res.status(500).send({error: err.message});
-  }
-});
-
-/**
- * @route PUT /users/:id/settings
- * @summary Update user settings by ID
- * @param req.params.id - User ID
- * @param req.body - Updated settings data
- * @returns 200 - User settings updated successfully
- * @returns 400 - Bad request (missing user data)
- * @returns 404 - User not found
- * @returns 500 - Server error
- */
-usersRouter.put('/users/:id/settings', async (req, res) => {
-  if(!req.body) {
-    res.status(400).send('User data must be provided in the request body');
-    return;
-  }
-  try {
-    const user = await UserModel.findById(req.params.id);
-    if (!user) {
-      res.status(404).send();
-    } else {
-      user.settings = req.body;
-      await user.save();
-      res.status(200).send(user.settings);
     }
   } catch (err) {
     res.status(500).send({error: err.message});

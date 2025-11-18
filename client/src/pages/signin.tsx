@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import type { FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { registerUser } from "../api";
 
 const RegisterPage: React.FC = () => {
@@ -24,7 +25,7 @@ const RegisterPage: React.FC = () => {
       // Redirigir o mostrar mensaje de éxito
     } catch (error) {
       console.error("Registration failed:", error);
-      setError((error as Error).message);
+      setError(`Registration failed. Please try again. ${(error as Error).message}`);
     }
   };
 
@@ -114,12 +115,12 @@ const RegisterPage: React.FC = () => {
 
             {/* Enlace a Login */}
             <div className="text-center mt-4">
-              <a
-                href="/login"
+              <Link
+                to="/login"
                 className="text-sm text-blue-600 hover:text-blue-800 transition"
               >
                 Already have an account? Login
-              </a>
+              </Link>
             </div>
           </form>
         </div>

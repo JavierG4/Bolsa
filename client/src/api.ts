@@ -5,6 +5,7 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
     ...options,
   };
   try {
+    console.log('Trying to fetch:', url, defaultOptions);
     let res = await fetch(url, defaultOptions);
     // Si el token expiró, intentar refresh token
     if (res.status === 401) {
@@ -15,17 +16,7 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
         throw new Error('Session expired');
       }
     }
-    
-    // Intentar parsear el body como JSON
-    let data = null;
-    try {
-      data = await res.json();
-    } catch {
-      // Si no es JSON, dejarlo como null
-      data = null;
-    }
-    
-    return { status: res.status, ok: res.ok, data };
+    return {status: res.status, ok: res.ok, data: await res.json()};
   }
   catch(err) {
     console.error('apiFetch error:', err);
@@ -36,14 +27,13 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
 export const loginUser = async (email: string, password: string) => {
   try {
     const res = await apiFetch('/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
     });
     if (!res.ok) {
-      const errorMsg = res.data?.error || res.data?.message || 'Login failed';
-      throw new Error(errorMsg);
+      throw new Error('Login failed');
     }
-    return res.data;
+    return res.ok
   }
   catch(err) {
     console.error('loginUser error:', err);
@@ -53,20 +43,26 @@ export const loginUser = async (email: string, password: string) => {
 
 export const registerUser = async (fullName: string, email: string, password: string) => {
   try {
-    const res = await apiFetch('/signIn', {
+    const res = await apiFetch('/users', {
       method: 'POST',
       body: JSON.stringify({ fullName, email, password }),
     });
     if (!res.ok) {
-      // Mostrar información detallada del error
-      const errorMsg = res.data?.error || res.data?.message || `Registration failed (Status: ${res.status})`;
-      console.error('Server error response:', res.data);
-      throw new Error(errorMsg);
+      throw new Error('Registration failed');
     }
-    return res.data;
+    return res.ok;
   } catch (err) {
     console.error('Error in registerUser:', err);
     throw err;
   }
 };
 
+export const getUserPatrimony = async () => {
+  const res = await apiFetch("/me/patrimonio", {
+    method: "GET"
+  });
+
+  if (!res.ok) throw new Error("Error getting patrimony");
+
+  return res.data.patrimonio;
+};

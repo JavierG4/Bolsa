@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { getActionsData, PRICE_TIME } from "../services/alphadvantageAPI";
+import { apiFetch } from "../api";
 
 
 const Dashboard: React.FC = () => {
@@ -8,16 +9,114 @@ const Dashboard: React.FC = () => {
   const [trendingData, setTrendingData] = useState<
     { symbol: string; changePercent: string }[]
   >([]);
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  const [filterType, setFilterType] = useState<string>('');
+  const [filterDate, setFilterDate] = useState<string>('');
+  const [filterSymbol, setFilterSymbol] = useState<string>('');
+  const [allUserHistory, setAllUserHistory] = useState<boolean>(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [errorHistory, setErrorHistory] = useState<string>('');
+
 
   const navItems = [
     { name: "Dashboard", path: "/dashboard" },
     { name: "Portfolio", path: "/portfolio" },
     { name: "Watchlist", path: "/watchlist" },
-    { name: "Search", path: "/search" },
+    { name: "Wallet", path: "/wallet" },
   ];
 
   const trendingSymbols = ["AAPL", "NVDA", "TSLA", "MSFT", "AMZN"];
 
+  const [userName, setUserName] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [loadingUser, setLoadingUser] = useState<boolean>(false);
+  const [errorUser, setErrorUser] = useState<string>('');
+
+  const fetchUserProfile = async () => {
+  setLoadingUser(true);
+  try {
+    const res = await apiFetch("/users", {
+      method: 'GET'
+    });
+
+    if (!res.ok) {
+      setErrorUser("Usuario no autenticado");
+      setLoadingUser(false);
+      return;
+    }
+
+    const data = await res.data;
+    setUserName(data.userName ?? "");
+    setUserEmail(data.mail ?? "");
+  } catch (err) {
+    setErrorUser("Error de conexión con el servidor");
+  } finally {
+    setLoadingUser(false);
+  }
+};
+
+
+  // Obtener perfil al montar el componente
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  // Función para buscar transacciones con filtros
+  const handleSearchHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      if (allUserHistory) {
+        const res = await apiFetch ('/transactions');
+        if (res.ok) {
+          const data = res.data;
+          setHistoryData(data.transaction || []);
+          setLoadingHistory(false);
+        }
+        else {
+          setErrorHistory('Error fetching all user history');
+          setLoadingHistory(false);
+        }
+      }
+      else {
+        let query: string = '/transactions?';
+        const params = new URLSearchParams();
+        if (filterType) {
+          params.append('actionType', filterType);
+        }
+        if (filterDate) {
+          const dates: string[] = filterDate.split('-'); // Formato YYYY-MM-DD
+          if (dates.length === 3) {
+            params.append('date', `${dates[2]}-${dates[1]}-${dates[0]}`); // Convertir a DD-MM-YYYY
+          }
+        }
+        if (filterSymbol) {
+          params.append('assetSymbol', filterSymbol);
+        }
+        if (params.toString().length === 0) {
+          query = '/transactions';
+        }
+        else {
+          query += params.toString();
+        }
+        const res = await apiFetch (query);
+        if (res.ok) {
+          const data = res.data;
+          setHistoryData(data.transaction || []);
+          setLoadingHistory(false);
+        }
+        else {
+          setErrorHistory('Error fetching filtered history');
+          setLoadingHistory(false);
+        }
+      }
+    }
+    catch(err) {
+      setErrorHistory('Error fetching history');
+      setLoadingHistory(false);
+    }
+  };
+
+  // Search transaction on history
   useEffect(() => {
   async function fetchTrending() {
     const results: { symbol: string; changePercent: string }[] = [];
@@ -97,12 +196,6 @@ const Dashboard: React.FC = () => {
           placeholder="Search your coins..."
           className="flex-1 bg-white/10 px-4 py-2 rounded-full text-sm placeholder-gray-400"
         />
-
-        <img
-          src="https://i.pravatar.cc/40"
-          alt="Avatar"
-          className="w-9 h-9 rounded-full object-cover"
-        />
       </div>
 
       {/* MOBILE SIDEBAR OVERLAY */}
@@ -161,14 +254,13 @@ const Dashboard: React.FC = () => {
 
           {/* Usuario */}
           <div className="flex items-center gap-3 pr-4">
-            <img
-              src="https://i.pravatar.cc/40"
-              alt="Avatar"
-              className="w-10 h-10 rounded-full object-cover"
-            />
             <div className="text-right">
-              <p className="text-sm font-medium leading-none">Usuario</p>
-              <p className="text-xs text-gray-400 leading-none">@usuario</p>
+              <p className="text-sm font-medium leading-none">
+                {loadingUser ? "Loading..." : userName || "Not Logged User"}
+              </p>
+              <p className="text-xs text-gray-400 leading-none">
+                {userEmail || (loadingUser ? "" : "@not logged")}
+              </p>
             </div>
           </div>
         </header>
@@ -192,7 +284,7 @@ const Dashboard: React.FC = () => {
                       className="flex justify-between"
                     >
                       <span>{item.symbol}</span>
-                      <span className={isPositive ? "text-green-400" : "text-red-400"}>
+                      <span className={isPositive ? "text-red-400" : "text-green-400"}>
                         {item.changePercent}
                       </span>
                     </div>
@@ -275,18 +367,84 @@ const Dashboard: React.FC = () => {
 
           <div className="bg-[#111] rounded-xl p-4 space-y-3 text-sm">
             <h3 className="text-xl font-medium mb-4">History</h3>
-            <div className="flex justify-between border-b border-white/5 pb-2">
-              <span>SushiSwap</span>
-              <span className="text-green-400">+$345.90</span>
+            
+            {/* Filtros */}
+            <div className="space-y-2 mb-4">
+              <div className="flex gap-2">
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="bg-white/5 px-3 py-2 rounded-lg text-sm flex-1 text-white"
+                >
+                  <option value="" style={{ color: 'grey', fontWeight: 'bold' }}>All types</option>
+                  <option value="BUY" style={{ color: 'grey', fontWeight: 'bold' }}>Buy</option>
+                  <option value="SELL" style={{ color: 'grey', fontWeight: 'bold' }}>Sell</option>
+                </select>
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="bg-white/5 px-3 py-2 rounded-lg text-sm flex-1"
+                />
+              </div>
+              
+              <input
+                type="text"
+                placeholder="Asset Symbol (e.g., AAPL)"
+                value={filterSymbol}
+                onChange={(e) => setFilterSymbol(e.target.value.toUpperCase())}
+                className="w-full bg-white/5 px-3 py-2 rounded-lg text-sm placeholder-gray-500"
+              />
+              
+              <label className="flex items-center gap-2 text-xs text-gray-400">
+                <input
+                  type="checkbox"
+                  checked={allUserHistory}
+                  onChange={(e) => setAllUserHistory(e.target.checked)}
+                  className="rounded"
+                />
+                Show all user history
+              </label>
+              
+              <button
+                onClick={handleSearchHistory}
+                className="w-full bg-green-500/20 hover:bg-green-500/30 text-green-400 py-2 rounded-lg font-medium transition"
+              >
+                Search
+              </button>
             </div>
-            <div className="flex justify-between border-b border-white/5 pb-2">
-              <span>Akash</span>
-              <span className="text-red-400">-$29.80</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Quorum</span>
-              <span className="text-green-400">+$2,567.80</span>
-            </div>
+
+            {/* Lista de transacciones */}
+            {errorHistory && (
+              <p className="text-center text-red-400 py-4">{errorHistory}</p>
+            )}
+            {loadingHistory ? (
+              <p className="text-center text-gray-400 py-4">Loading...</p>
+            ) : historyData.length > 0 ? (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {historyData.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <div className="flex flex-col">
+                      <span className="font-medium">{item.assetSymbol}</span>
+                      <span className="text-xs text-gray-400">
+                        {item.date ? `${String(item.date.day).padStart(2, '0')}-${String(item.date.month).padStart(2, '0')}-${item.date.year}` : ''}
+                        {item.actionType && ` • ${item.actionType}`}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className={item.quantity >= 0 ? "text-green-400 font-semibold" : "text-red-400 font-semibold"}>
+                        {item.quantity >= 0 ? '+' : ''}${Math.abs(item.quantity).toFixed(2)}
+                      </span>
+                      {item.quantity && (
+                        <div className="text-xs text-gray-400">{item.quantity} units</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-gray-400 py-4">No transactions found</p>
+            )}
           </div>
         </section>
       </main>

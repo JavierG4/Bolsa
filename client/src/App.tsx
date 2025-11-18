@@ -4,7 +4,9 @@ import LoginPage from "./pages/login";
 import RegisterPage from "./pages/signin";
 import Dashboard from "./pages/dashboard";
 import Settings from "./pages/settings"
-import Search from "./pages/search";
+import Watchlist from "./pages/watchlist";
+import Prueba from "./pages/prueba";
+import Wallet from "./pages/wallet";
 
 const App: React.FC = () => {
   return (
@@ -17,8 +19,10 @@ const App: React.FC = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/settings" element={<Settings/>} />
-        <Route path="/search" element={<Search/>} />
+        <Route path="/portfolio" element={<Settings/>} />
+        <Route path="/watchlist" element={<Watchlist/>} />
+        <Route path="/wallet" element={<Wallet/>} />
+        <Route path="/prueba" element={<Prueba/>} />
 
         {/* Si se mete otra URL no existente */}
         <Route path="*" element={<h1 className="text-center mt-10 text-xl">404 - Page Not Found</h1>} />

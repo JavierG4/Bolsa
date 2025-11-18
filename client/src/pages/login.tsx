@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import type { FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { loginUser } from "../api";
 
 
@@ -21,7 +22,7 @@ const LoginPage: React.FC = () => {
     try {
       const user = await loginUser(email, password);
       console.log('Logged in user:', user);
-      // Aquí podrías redirigir, guardar estado global, etc.
+      window.location.href = '/dashboard';
     } catch (err: any) {
       setError(err.message);
     }
@@ -110,10 +111,10 @@ const LoginPage: React.FC = () => {
 
           {/* Link to Register */}
           <div className="text-center mt-8 text-gray-500 text-sm">
-            Don’t have an account?{" "}
-            <a href="/register" className="text-blue-600 hover:text-blue-800 transition">
+            Don't have an account?{" "}
+            <Link to="/register" className="text-blue-600 hover:text-blue-800 transition">
               Sign up
-            </a>
+            </Link>
           </div>
         </div>
       </main>

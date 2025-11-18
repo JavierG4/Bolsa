@@ -1,19 +1,9 @@
-// @ts-nocheck
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { apiFetch } from "../api";
-import { getUserPatrimony } from "../api.ts"; 
 
-// Icons
-import { MessageSquare, Users, HelpCircle, Settings, History } from "lucide-react";
 
-interface ProfileItemProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}
-
-export default function Portfolio(): JSX.Element {
+const Watchlist: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -22,34 +12,27 @@ export default function Portfolio(): JSX.Element {
     { name: "Watchlist", path: "/watchlist" },
     { name: "Wallet", path: "/wallet" },
   ];
-  const [patrimony, setPatrimony] = useState<number | null>(null);
+  const [showEditOptions, setShowEditOptions] = useState(false);
 
-  useEffect(() => {
-    getUserPatrimony()
-      .then((value) => setPatrimony(value))
-      .catch((err) => console.error("Error loading patrimony:", err));
-  }, []);
+  const [userName, setUserName] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [loadingUser, setLoadingUser] = useState<boolean>(false);
+  const [errorUser, setErrorUser] = useState<string>('');
 
-    const [userName, setUserName] = useState<string>('');
-    const [userEmail, setUserEmail] = useState<string>('');
-    const [loadingUser, setLoadingUser] = useState<boolean>(false);
-    const [errorUser, setErrorUser] = useState<string>('');
-  
   const fetchUserProfile = async () => {
     setLoadingUser(true);
     try {
       const res = await apiFetch("/users", {
         method: 'GET'
       });
-    
+
       if (!res.ok) {
         setErrorUser("Usuario no autenticado");
         setLoadingUser(false);
         return;
       }
-    
+
       const data = await res.data;
-      console.log("User profile data:", data);
       setUserName(data.userName ?? "");
       setUserEmail(data.mail ?? "");
     } catch (err) {
@@ -58,12 +41,11 @@ export default function Portfolio(): JSX.Element {
       setLoadingUser(false);
     }
   };
-  
-  
+
   // Obtener perfil al montar el componente
   useEffect(() => {
     fetchUserProfile();
-  }, []);
+  }, []);  
 
   return (
     <div className="min-h-screen bg-black text-white flex relative">
@@ -117,7 +99,6 @@ export default function Portfolio(): JSX.Element {
           placeholder="Search your coins..."
           className="flex-1 bg-white/10 px-4 py-2 rounded-full text-sm placeholder-gray-400"
         />
-
       </div>
 
       {/* MOBILE SIDEBAR OVERLAY */}
@@ -162,9 +143,17 @@ export default function Portfolio(): JSX.Element {
 
       {/* MAIN CONTENT */}
       <main className="flex-1 p-6 md:ml-0 mt-16 md:mt-0">
-        {/* HEADER DESKTOP */}
-        <header className="hidden md:flex items-center justify-between gap-4 w-full mb-10">
-          <h2 className="text-3xl font-semibold">Portfolio</h2>
+        {/* HEADER (DESKTOP) */}
+        <header className="hidden md:flex flex-wrap items-center gap-4 w-full mb-6">
+          <h2 className="text-3xl font-semibold">Watchlist</h2>
+
+          {/* Buscador */}
+          <div className="ml-auto w-full max-w-xs">
+            <input
+              placeholder="Search your coins..."
+              className="bg-white/10 px-4 py-2 rounded-full text-sm placeholder-gray-400 w-full"
+            />
+          </div>
 
           {/* Usuario */}
           <div className="flex items-center gap-3 pr-4">
@@ -179,86 +168,97 @@ export default function Portfolio(): JSX.Element {
           </div>
         </header>
 
-        {/* Spacer móvil */}
+        {/* Spacer móvil para evitar solapamiento con top bar */}
         <div className="md:hidden h-10 flex items-center justify-center px-4 mb-6">
+          <h2 className="text-3xl font-semibold text-white text-center">Search</h2>
         </div>
 
-        {/* ---------- PAGE CONTENT ---------- */}
+        {/* MY COINS LIST */}
+        <section className="bg-[#0d0d0d] rounded-xl p-6 shadow-xl">
+          {/* Header */}
+          <div className="flex flex-wrap items-center gap-4 mb-6">
+            <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm">
+              Primary
+            </span>
 
-        {/* Header Section */}
-        <div className="mb-10">
-          <h2 className="text-xl font-semibold mt-4 text-gray-400">Personal</h2>
-          <h3 className="text-3xl font-bold">Javier Gonzalez Brito</h3>
-        </div>
+            <h3 className="text-2xl font-semibold">My coins list</h3>
 
-        {/* Stats Section */}
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-14">
-          <div className="bg-green-500/20 rounded-2xl p-6 text-center shadow-lg">
-            <p className="text-gray-400 mb-2">Patrimony</p>
+            <button
+              onClick={() => setShowEditOptions(!showEditOptions)}
+              className="ml-auto bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition"
+            >
+              Edit
+            </button>
 
-            {patrimony === null ? (
-              <p className="text-xl text-gray-400">Loading...</p>
-            ) : (
-              <p className="text-2xl font-bold">
-                {patrimony.toLocaleString()} $
-              </p>
+            {showEditOptions && (
+              <div className="absolute mt-2 bg-[#111] p-3 rounded-lg shadow-xl text-sm">
+                <button className="text-red-400 hover:text-red-300">Delete list</button>
+              </div>
             )}
-          </div>
-          <div className="bg-green-500/20 rounded-2xl p-6 text-center shadow-lg">
-            <p className="text-gray-400 mb-2 flex justify-center items-center gap-2">
-              <MessageSquare size={18} /> Messages
-            </p>
-            <p className="text-2xl font-bold">0</p>
+
+            <button className="bg-green-500 text-black px-4 py-2 rounded-lg font-semibold">
+              + New watchlist
+            </button>
           </div>
 
-          <div className="bg-green-500/20 rounded-2xl p-6 text-center shadow-lg">
-            <p className="text-gray-400 mb-2">Followed Stocks</p>
-            <p className="text-2xl font-bold">4</p>
+          {/* Actions */}
+          <div className="flex items-center gap-3 mb-4">
+            <button className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition">
+              + Add coins
+            </button>
+            <button className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition">
+              Share
+            </button>
+            <button className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition">
+              More
+            </button>
           </div>
-        </section>
 
-        {/* Profile Section */}
-        <section className="mt-14">
-          <h2 className="text-xl font-bold text-gray-400 mb-6">Profile</h2>
+          {/* TABLE */}
+          <div className="overflow-x-auto mt-4">
+            <table className="w-full text-sm">
+              <thead className="text-gray-400 border-b border-white/5">
+                <tr>
+                  <th className="py-3 text-left">#</th>
+                  <th className="py-3 text-left">Name</th>
+                  <th className="py-3">Price</th>
+                  <th className="py-3">24H</th>
+                  <th className="py-3">7D</th>
+                  <th className="py-3">Market cap</th>
+                  <th className="py-3">Volume</th>
+                  <th className="py-3">Actions</th>
+                </tr>
+              </thead>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <ProfileItem
-              icon={<Users size={28} />}
-              title="Invite friends"
-              description="Invite your friends and remove the ads for 7 days"
-            />
-            <ProfileItem
-              icon={<History size={28} />}
-              title="Transactions history"
-              description="Check past transactions"
-            />
-            <ProfileItem
-              icon={<HelpCircle size={28} />}
-              title="Help"
-              description="Frequently asked questions and more"
-            />
-            <ProfileItem
-              icon={<Settings size={28} />}
-              title="Settings"
-              description="Personal data, security, sign out and more"
-            />
+              <tbody className="divide-y divide-white/5">
+                {/* Example row – repeat or map your coins */}
+                <tr className="hover:bg-white/5 transition">
+                  <td className="py-3">1</td>
+                  <td className="flex items-center gap-2 py-3">
+                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" className="w-6 h-6" />
+                    <span>Tether</span>
+                    <span className="text-gray-500 text-xs ml-1">USDT</span>
+                  </td>
+                  <td className="text-center">$1.00</td>
+                  <td className="text-green-400 text-center">▲ 0.22%</td>
+                  <td className="text-red-400 text-center">▼ 3.22%</td>
+                  <td className="text-center">$218,533,780</td>
+                  <td className="text-center">$5,763,203,118</td>
+                  <td className="text-center">
+                    <button className="bg-white/10 hover:bg-white/20 px-3 py-1 rounded-lg">
+                      ⋮
+                    </button>
+                  </td>
+                </tr>
+
+                {/* Aquí puedes mapear más filas con tus datos reales */}
+              </tbody>
+            </table>
           </div>
         </section>
       </main>
     </div>
   );
-}
+};
 
-/* ---------------- REUSABLE PROFILE ITEM ---------------- */
-
-function ProfileItem({ icon, title, description }: ProfileItemProps): JSX.Element {
-  return (
-    <div className="flex items-start gap-4 bg-green-500/20 rounded-2xl p-5 shadow-md hover:bg-green-800 transition">
-      <div className="text-white">{icon}</div>
-      <div>
-        <h3 className="font-semibold text-lg">{title}</h3>
-        <p className="text-gray-400 text-sm">{description}</p>
-      </div>
-    </div>
-  );
-}
+export default Watchlist;

@@ -22,38 +22,44 @@ transactionRouter.use(express.json())
  */
 transactionRouter.get('/transactions', async (req, res) => {
 try {
-  // Check if filters are valid
+  //Obtenemos el userId del token (añadido por el middleware global)
+  const userId: string = (req as any).user.userId;
   const validFilters = ["userId", "assetSymbol", "actionType", "date"]
   const params = req.query
   const invalidParams = Object.keys(req.query).filter(param => !validFilters.includes(param))
   if (invalidParams.length > 0) {
     return res.status(400).send({error: `Params ${invalidParams} are invalid`})
   }
-  // Check if there is at least one valid filter
-  else if (!params.userId && !params.assetSymbol && !params.actionType && !params.date) {
-    return res.status(400).send({error: 'userId, assetSymbol, actionType or date must be provided'})
-  }
   else {
     const filter: any = {}
     // Add parameters to the filter
-    if (params.userId) filter.userId = params.userId
+    filter.userId = userId
     if (params.assetSymbol) filter.assetSymbol = params.assetSymbol
     if (params.actionType) filter.actionType = params.actionType as ActionType
     if (params.date as string) {
-      if ((params.date)?.length != 10) {
+      const dateStr = params.date as string;
+      if (dateStr.length !== 10) {
         return res.status(400).send({error: 'Date must be in format DD-MM-YYYY'})
       }
-      else {
-        const stringDate: string = params.date as string
-        filter['date.day'] = Number(stringDate.slice(0, 2))
-        filter['date.month'] = Number(stringDate.slice(3, 5))
-        filter['date.year'] = Number(stringDate.slice(6, 10))
+      // Validar que tenga guiones en las posiciones correctas
+      if (dateStr[2] !== '-' || dateStr[5] !== '-') {
+        return res.status(400).send({error: 'Date must be in format DD-MM-YYYY'})
       }
+      const day = Number(dateStr.slice(0, 2));
+      const month = Number(dateStr.slice(3, 5));
+      const year = Number(dateStr.slice(6, 10));
+      // Validar que sean números válidos
+      if (isNaN(day) || isNaN(month) || isNaN(year)) {
+        return res.status(400).send({error: 'Date must be in format DD-MM-YYYY'})
+      }
+      filter['date.day'] = day;
+      filter['date.month'] = month;
+      filter['date.year'] = year;
     }
     // Search the transaction
     const transaction = await TransactionModel.find(filter)
     if (transaction.length == 0) {
-      return res.status(404).send({error: 'Transaction not found'})
+      return res.status(200).send({transaction: []})
     }
     else {
       return res.status(200).send({transaction: transaction})
@@ -65,28 +71,6 @@ catch(err) {
 }
 })
 
-/**
- * @route GET /transaction/:id
- * @summary Get a transaction by id
- * @param req.params.id - The id of the transaction to retrieve
- * @returns 200 - Transaction found
- * @returns 404 - Transaction not found
- * @returns 500 - Server error
- */
-transactionRouter.get('/transactions/:id', async (req, res) => {
-  try {
-    const transaction = await TransactionModel.findById(req.params.id)
-    if (!transaction) {
-      return res.status(404).send({error: `Transaction with id ${req.params.id} not found`})
-    }
-    else {
-      return res.status(200).send({transaction: transaction})
-    }
-  }
-  catch(err) {
-    return res.status(500).send({error: err.message})
-  }
-})
 
 /**
  * @route POST /transactions

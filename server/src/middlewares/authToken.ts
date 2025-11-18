@@ -8,7 +8,7 @@ export const authMiddleware = (req, res, next) => {
   if (!token) {
     return res.status(401).send("No token provided");
   }
-
+  
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
     req.user = decoded

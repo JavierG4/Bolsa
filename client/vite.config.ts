@@ -8,14 +8,14 @@ export default defineConfig({
     react(),          // Plugin de React
     tailwindcss(),    // Plugin de Tailwind
   ],
+  base: '/',
   server: {
     proxy: {
-      // Redirigir todas las llamadas API al servidor backend
       '/login': 'http://localhost:3000',
-      '/signIn': 'http://localhost:3000',
       '/users': 'http://localhost:3000',
-      '/logout': 'http://localhost:3000',
       '/refresh-token': 'http://localhost:3000',
+      '/transactions': 'http://localhost:3000',
+      '/me': 'http://localhost:3000', 
     }
   }
 })
