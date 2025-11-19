@@ -78,7 +78,7 @@ const Wallet: React.FC = () => {
     }
   };
 
-  const [patrimony, setPatrimony] = useState<number | null>(null);
+  const [patrimony, setPatrimony] = useState<string | null>(null);
   const [loadingPatrimony, setLoadingPatrimony] = useState<boolean>(false);
   const [errorPatrimony, setErrorPatrimony] = useState<string>('');
 
@@ -92,7 +92,7 @@ const Wallet: React.FC = () => {
   useEffect(() => {
     fetchUserProfile();
     fetchUserWalletAssets();
-    fetching
+    fetchUserPatrimony();
   }, []);  
 
 
@@ -144,10 +144,6 @@ const Wallet: React.FC = () => {
           Trading Web
         </h1>
 
-        <input
-          placeholder="Search your coins..."
-          className="flex-1 bg-white/10 px-4 py-2 rounded-full text-sm placeholder-gray-400"
-        />
       </div>
 
       {/* MOBILE SIDEBAR OVERLAY */}
@@ -198,10 +194,6 @@ const Wallet: React.FC = () => {
 
           {/* Buscador */}
           <div className="ml-auto w-full max-w-xs">
-            <input
-              placeholder="Search your coins..."
-              className="bg-white/10 px-4 py-2 rounded-full text-sm placeholder-gray-400 w-full"
-            />
           </div>
 
           {/* Usuario */}
@@ -219,23 +211,21 @@ const Wallet: React.FC = () => {
 
         {/* Spacer móvil para evitar solapamiento con top bar */}
         <div className="md:hidden h-10 flex items-center justify-center px-4 mb-6">
-          <h2 className="text-3xl font-semibold text-white text-center">Search</h2>
+          <h2 className="text-3xl font-semibold text-white text-center">Wallet</h2>
         </div>
 
         {/* Balance section */}
         <section className="bg-[#111] p-8 rounded-2xl mb-10">
           <p className="text-gray-400">Current balance</p>
-          <h2 className="text-4xl font-bold mt-2">{patrimony}</h2>
-          {/* <p className="text-red-400 mt-1">-$1200.78 (1.89%)</p> */}
-
-          <div className="flex items-center gap-4 mt-6">
-            <button className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl hover:bg-white/20 transition">
-              <Edit size={18} /> Edit
-            </button>
-            <button className="flex items-center gap-2 bg-green-500 px-4 py-2 rounded-xl hover:bg-green-600 transition">
-              <Plus size={18} /> Add transaction
-            </button>
-          </div>
+          <h2 className="text-4xl font-bold mt-2">
+            {patrimony === null ? (
+              <p className="text-xl text-gray-400">Loading...</p>
+            ) : (
+              <p className="text-4xl font-bold mt-2">
+                {patrimony.toLocaleString()} $
+              </p>
+            )}
+          </h2>
         </section>
 
         {/* Holdings Table */}
@@ -265,7 +255,7 @@ const Wallet: React.FC = () => {
                       <small className="text-gray-400">{c.symbol}</small>
                     </td>
                     <td className="px-4">{"NoData"}</td>
-                    <td className={`px-4 ${c.type} ? "text-green-400" : "text-red-400"}`}>{c.change}</td>
+                    <td className="px-4">{c.type.toUpperCase()}</td>
                     <td className="px-4">{c.quantity}</td>
                     <td className="px-4">{c.avgBuyPrice}</td>
                     <td className="px-4">{"NoData"}</td>
