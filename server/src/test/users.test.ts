@@ -55,9 +55,9 @@ describe('User Routes', () => {
         .send(newUser);
 
       expect(res.status).toBe(201);
-      expect(res.body).toHaveProperty('_id');
-      expect(res.body.mail).toBe('juan@example.com');
-      userId = res.body._id;
+      expect(res.body.user).toHaveProperty('_id');
+      expect(res.body.user.mail).toBe('juan@example.com');
+      userId = res.body.user._id;
       // Login para obtener token
       const loginRes = await request(app)
         .post('/login')
@@ -136,23 +136,23 @@ describe('User Routes', () => {
     });
   });
 
-  // GET /users/:id
-  describe('GET /users/:id', () => {
+  // GET /users/
+  describe('GET /users', () => {
     it('debería obtener un usuario existente', async () => {
 
       const res = await request(app)
-        .get(`/users/${userId}`)
+        .get(`/users`)
         .set('Cookie', `access_token=${authToken}`);
+        
 
       expect(res.status).toBe(200);
       expect(res.body.userName).toBe('juan');
     });
 
-    it('debería devolver 404 si no existe', async () => {
+    it('debería devolver 401 si no se autentica', async () => {
       const res = await request(app)
-        .get('/users/000000000000000000000000')
-        .set('Cookie', `access_token=${authToken}`);
-      expect(res.status).toBe(404);
+        .get('/users');
+      expect(res.status).toBe(401);
     });
   });
 

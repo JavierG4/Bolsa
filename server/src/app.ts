@@ -8,10 +8,12 @@ import cookieParser from 'cookie-parser';
 import { authenticationRouter } from './routers/autheinthicationRoutes.js';
 import { authMiddleware } from './middlewares/authToken.js';
 import { auxiliar } from './routers/auxiliar.js';
+import routerprices from './routers/actualizarassets.js';
 
 export const app = express();
 app.use(express.json());
 app.use(cookieParser());
+app.use(routerprices)
 app.use(authenticationRouter); 
 app.use(authMiddleware);
 app.use(AssetRouter);

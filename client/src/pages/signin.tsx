@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../api";
 
 const RegisterPage: React.FC = () => {
@@ -18,11 +18,12 @@ const RegisterPage: React.FC = () => {
     }
 
     setError("");
-    console.log("Registering user:", { fullName, email, password });
     try {
       const response = await registerUser(fullName, email, password);
       console.log("Registration successful:", response);
-      // Redirigir o mostrar mensaje de éxito
+      const navigate = useNavigate();
+      navigate("/login")
+      
     } catch (error) {
       console.error("Registration failed:", error);
       setError(`Registration failed. Please try again. ${(error as Error).message}`);

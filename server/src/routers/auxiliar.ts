@@ -1,6 +1,10 @@
 import express from "express";
 import { PortfolioModel } from "../models/portfolio.js";
 import { UserModel } from "../models/user.js";
+import { Request, Response } from "express";
+import { TOP_STOCKS, TOP_CRYPTOS } from "../config/assets.js";
+import { getActionsData, getCriptoData, PRICE_TIME } from "../services/FMP.js";
+import { AssetPriceModel } from "../models/asset.js";
 
 
 
@@ -9,6 +13,10 @@ export const auxiliar = express.Router();
 /**
  * @route GET /me/patrimonio
  * @desc Returns total user portfolio value
+ */
+/**
+ * @route GET /me/patrimonio
+ * @desc Returns total user portfolio value using CURRENT prices
  */
 auxiliar.get("/me/patrimonio", async (req, res) => {
   try {
@@ -30,50 +38,54 @@ auxiliar.get("/me/patrimonio", async (req, res) => {
       }
     });
 
-    console.log("Paso 4: Resultado de UserModel.findById:", user);
-
-    if (!user) {
-      console.log("Paso 4.1: No se encontró usuario");
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    if (!user.portfolio) {
-      console.log("Paso 4.2: El usuario NO tiene portfolio");
-      return res.status(404).json({ error: "User has no portfolio" });
-    }
-
-    console.log("Paso 5: Portfolio encontrado:", user.portfolio);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user.portfolio) return res.status(200).json({ patrimonio: 0 });
 
     const portfolio = user.portfolio as any;
 
-    if (!portfolio.assets) {
-      console.log("Paso 5.1: Portfolio sin assets → devolviendo 0");
+    if (!portfolio.assets || portfolio.assets.length === 0) {
       return res.status(200).json({ patrimonio: 0 });
     }
 
-    console.log("Paso 6: Assets del portfolio:", portfolio.assets);
-
     let patrimonio = 0;
 
-    for (const asset of portfolio.assets) {
-      console.log("Paso 7: Procesando asset:", asset);
+    console.log("Paso 4: Calculando patrimonio usando precios actuales...");
 
-      if (asset?.quantity && asset?.avgBuyPrice) {
-        patrimonio += asset.quantity * asset.avgBuyPrice;
-      } else {
-        console.log("Paso 7.1: Asset sin quantity o avgBuyPrice", asset);
+    for (const asset of portfolio.assets) {
+      console.log("Procesando:", asset.symbol);
+
+      if (!asset.symbol || !asset.quantity) {
+        console.log("Asset incompleto:", asset);
+        continue;
       }
+
+      // 🔥 Obtener precio ACTUAL desde la BD
+      const priceEntry = await AssetPriceModel.findOne({ symbol: asset.symbol });
+
+      if (!priceEntry) {
+        console.log(`⚠️ No existe precio actual para ${asset.symbol}, se ignora`);
+        continue;
+      }
+
+      const currentPrice = priceEntry.price;
+
+      patrimonio += asset.quantity * currentPrice;
+
+      console.log(
+        `✔️ ${asset.symbol}: quantity=${asset.quantity}, price=${currentPrice} → subtotal=${asset.quantity * currentPrice}`
+      );
     }
 
-    console.log("Paso 8: Patrimonio final calculado =", patrimonio);
+    console.log("Patrimonio final:", patrimonio);
 
     return res.status(200).json({ patrimonio });
 
   } catch (err: any) {
-    console.error("Paso ERROR: Excepción atrapada:", err);
+    console.error("ERROR EN /me/patrimonio:", err);
     return res.status(500).json({ error: err.message });
   }
 });
+
 
 /**
  * @route GET /me/assets
@@ -132,3 +144,4 @@ auxiliar.get("/me/assets", async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
+

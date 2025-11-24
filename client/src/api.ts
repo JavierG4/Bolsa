@@ -45,10 +45,10 @@ export const registerUser = async (fullName: string, email: string, password: st
   try {
     const res = await apiFetch('/users', {
       method: 'POST',
-      body: JSON.stringify({ fullName, email, password }),
+      body: JSON.stringify({ userName: fullName, mail: email, password: password }),
     });
     if (!res.ok) {
-      throw new Error('Registration failed');
+      throw new Error(res.data?.error || 'Registration failed');
     }
     return res.ok;
   } catch (err) {

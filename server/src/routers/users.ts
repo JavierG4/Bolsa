@@ -66,27 +66,27 @@ usersRouter.get('/users', async (req, res) => {
   }
 });
 
-/**
- * @route GET /users/:id
- * @summary Get a user by ID
- * @param req.params.id - User ID
- * @returns 200 - User found
- * @returns 404 - User not found
- * @returns 500 - Server error
- */
-usersRouter.get('/users/:id', async (req, res) => {
-  try {
-    const user = await UserModel.findById(req.params.id);
-    if (!user) {
-      res.status(404).send();
-    }
-    else {
-      res.status(200).send(user);
-    }
-  } catch (err) {
-    res.status(500).send({error: err.message});
-  }
-});
+// /**
+//  * @route GET /users/:id
+//  * @summary Get a user by ID
+//  * @param req.params.id - User ID
+//  * @returns 200 - User found
+//  * @returns 404 - User not found
+//  * @returns 500 - Server error
+//  */
+// usersRouter.get('/users/:id', async (req, res) => {
+//   try {
+//     const user = await UserModel.findById(req.params.id);
+//     if (!user) {
+//       res.status(404).send();
+//     }
+//     else {
+//       res.status(200).send(user);
+//     }
+//   } catch (err) {
+//     res.status(500).send({error: err.message});
+//   }
+// });
 
 /**
  * @route PUT /users/:id
