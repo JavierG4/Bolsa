@@ -5,7 +5,9 @@ import { Request, Response } from "express";
 import { TOP_STOCKS, TOP_CRYPTOS } from "../config/assets.js";
 import { getActionsData, getCriptoData, PRICE_TIME } from "../services/FMP.js";
 import { AssetPriceModel } from "../models/asset.js";
-
+import {TransactionModel} from "../models/transactionAsset.js";
+import { AssetModel } from "../models/portfolioAsset.js";
+import mongoose from "mongoose";
 
 
 export const auxiliar = express.Router();
@@ -145,3 +147,102 @@ auxiliar.get("/me/assets", async (req, res) => {
   }
 });
 
+
+auxiliar.post("/me/add", async (req, res) => {
+  try {
+    const userId = (req as any).user.userId;
+    const { symbol, avgBuyPrice, quantity, type } = req.body;
+
+    console.log("POST /me/add - userId:", userId);
+    console.log("POST /me/add - body:", { symbol, avgBuyPrice, quantity, type });
+
+    if (!userId) return res.status(401).json({ error: "Missing user ID" });
+
+    //  Buscar usuario y portfolio completo
+    const user = await UserModel.findById(userId).populate({
+      path: "portfolio",
+      populate: {
+        path: "assets",
+        model: "PortfolioAsset"
+      }
+    });
+
+    console.log("Usuario encontrado:", user ? "Sí" : "No");
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    let portfolio = user.portfolio as any;
+    console.log("Portfolio assets count:", portfolio.assets?.length ?? 0);
+
+    //  Buscar si el asset ya existe dentro del portfolio
+    const existingAsset = portfolio.assets.find(asset => {
+      // si es ObjectId, ignorar
+      if (asset instanceof mongoose.Types.ObjectId) return false;
+      return asset.symbol === symbol && asset.type === type;
+    });
+
+    console.log("Asset existente:", existingAsset ? "Sí" : "No");
+
+    if (existingAsset) {
+      console.log("Actualizando asset existente...");
+      //  Actualizar precio medio y cantidad
+      const oldTotal = existingAsset.quantity * existingAsset.avgBuyPrice;
+      const newTotal = quantity * avgBuyPrice;
+
+      console.log("Cálculo: oldTotal =", oldTotal, "newTotal =", newTotal);
+
+      existingAsset.quantity += quantity;
+      existingAsset.avgBuyPrice = (oldTotal + newTotal) / existingAsset.quantity;
+
+      console.log("Nuevos valores: quantity =", existingAsset.quantity, "avgBuyPrice =", existingAsset.avgBuyPrice);
+
+      await existingAsset.save();
+    } else {
+      console.log("Creando nuevo asset...");
+      //  Validar que el asset exista en AssetPriceModel
+      const priceEntry = await AssetPriceModel.findOne({ symbol, type });
+      console.log("Precio encontrado:", priceEntry ? "Sí" : "No");
+
+      if (!priceEntry) {
+        return res.status(404).json({
+          error: `No existe el asset ${symbol} en el tipo ${type}`
+        });
+      }
+
+      //  Crear nuevo asset
+      const newAsset = await AssetModel.create({
+        symbol,
+        type,
+        quantity,
+        avgBuyPrice,
+        name: priceEntry.name
+      });
+
+      console.log("Nuevo asset creado:", newAsset._id);
+
+      portfolio.assets.push(newAsset._id);
+    }
+
+    await portfolio.save();
+    console.log("Portfolio guardado");
+
+    //  Registrar transacción
+    await TransactionModel.create({
+      userId,
+      symbol,
+      type,
+      quantity,
+      price: avgBuyPrice,
+      action: "buy",
+      createdAt: new Date()
+    });
+
+    console.log("Transacción registrada");
+
+    return res.json({ success: true });
+
+  } catch (err) {
+    console.error("ERROR en POST /me/add:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});

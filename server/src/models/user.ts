@@ -1,12 +1,14 @@
 import {Document, ObjectId, Schema, model} from 'mongoose';
 
 import {ownDate} from './friendInvite.js';
+import { Portfolio } from './portfolio.js';
+import mongoose from 'mongoose';
 
 export interface User extends Document {
   userName: string;
   mail: string;
   password: string;
-  portfolio: ObjectId;
+  portfolio: mongoose.Types.ObjectId | Portfolio;
   settings: ObjectId;
   createdAt: ownDate;
 }
