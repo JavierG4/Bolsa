@@ -6,14 +6,20 @@ import { UserModel } from '../models/user.js';
 import { PortfolioModel } from '../models/portfolio.js';
 import { UserSettingsModel } from '../models/userSettings.js';
 import mongoose from 'mongoose';
-import '../db/mongoose.js'; // Conectar a MongoDB
+import { MongoMemoryServer } from 'mongodb-memory-server';
+
+let mongoServer: MongoMemoryServer;
 
 describe('Transaction Routes', () => {
   let authToken: string;
   let testUserId: string;
   let transactionId: string;
 
+
   beforeAll(async () => {
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri);
     // Crear documentos relacionados primero
     const portfolio = await PortfolioModel.create({
       assets: [],
@@ -74,7 +80,8 @@ describe('Transaction Routes', () => {
     }
     await TransactionModel.deleteMany({ userId: testUserId });
     await UserModel.findByIdAndDelete(testUserId);
-    await mongoose.connection.close();
+    await mongoose.disconnect();
+    await mongoServer.stop();
   }, 1000);
 
   beforeEach(async () => {
