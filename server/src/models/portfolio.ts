@@ -11,7 +11,7 @@ try {
 
 // Cada vez que se accede al usuario 
 export interface Portfolio extends Document{
-  assets: Array<mongoose.Types.ObjectId | PortfolioAsset>;
+  assets: mongoose.Types.ObjectId[];
   totalValue: number;
   lastUpdated: ownDate;
 }

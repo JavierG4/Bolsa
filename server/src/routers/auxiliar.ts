@@ -150,7 +150,8 @@ auxiliar.get("/me/assets", async (req, res) => {
 
 auxiliar.post("/me/add", async (req, res) => {
   try {
-    const userId = (req as any).user.userId;
+    //const userId = (req as any).user.userId;
+    const userId = "691c664622d0266f769c5bcb"
     const { symbol, avgBuyPrice, quantity, type } = req.body;
 
     console.log("POST /me/add - userId:", userId);
@@ -227,14 +228,18 @@ auxiliar.post("/me/add", async (req, res) => {
     console.log("Portfolio guardado");
 
     //  Registrar transacción
+    const now = new Date();
     await TransactionModel.create({
       userId,
-      symbol,
-      type,
+      assetSymbol: symbol,
+      actionType: "BUY",
       quantity,
       price: avgBuyPrice,
-      action: "buy",
-      createdAt: new Date()
+      date: {
+      day: now.getDate(),
+      month: now.getMonth() + 1,
+      year: now.getFullYear()
+      }
     });
 
     console.log("Transacción registrada");
