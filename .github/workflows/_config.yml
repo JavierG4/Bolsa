@@ -6,7 +6,24 @@ on:
   pull_request:
     branches: [ "main" ]
 
- # ----- SERVER -----
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x, 23.x]
+
+    steps:
+    - name: Cloning repo
+      uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    # ----- SERVER -----
     - name: Install server dependencies
       run: |
         cd server
@@ -23,7 +40,7 @@ on:
         cd client
         npm ci
 
-    - name: Run client tests
+    - name: Run client e2e tests
       run: |
         cd client
-        npm test:e2e
+        npm run test:e2e
