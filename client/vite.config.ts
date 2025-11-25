@@ -15,7 +15,8 @@ export default defineConfig({
       '/users': 'http://localhost:3000',
       '/refresh-token': 'http://localhost:3000',
       '/transactions': 'http://localhost:3000',
-      '/me': 'http://localhost:3000', 
+      '/me': 'http://localhost:3000',
+      '/all-data': 'http://localhost:3000',
     }
   }
 })

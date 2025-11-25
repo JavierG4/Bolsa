@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { registerUser } from "../api";
+import { Link } from "react-router-dom";
+import { registerUser, loginUser } from "../api";
 
 const RegisterPage: React.FC = () => {
   const [fullName, setFullName] = useState<string>("");
@@ -21,11 +21,12 @@ const RegisterPage: React.FC = () => {
     try {
       const response = await registerUser(fullName, email, password);
       console.log("Registration successful:", response);
-      const navigate = useNavigate();
-      navigate("/login")
+      const user = await loginUser(email, password);
+      console.log('Logged in user:', user);
+      window.location.href = '/dashboard';
+
       
     } catch (error) {
-      console.error("Registration failed:", error);
       setError(`Registration failed. Please try again. ${(error as Error).message}`);
     }
   };
@@ -111,6 +112,9 @@ const RegisterPage: React.FC = () => {
               type="submit"
               className="w-full rounded-3xl py-4 bg-black text-white font-semibold text-lg hover:bg-gray-800 transition"
             >
+              <Link
+                to="/login">
+              </Link>
               Sign up
             </button>
 

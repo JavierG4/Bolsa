@@ -149,9 +149,10 @@ auxiliar.get("/me/assets", async (req, res) => {
 
 
 auxiliar.post("/me/add", async (req, res) => {
+  console.log(req.body)
   try {
-    //const userId = (req as any).user.userId;
-    const userId = "691c664622d0266f769c5bcb"
+    const userId = (req as any).user.userId;
+    // const userId = "691c664622d0266f769c5bcb"
     const { symbol, avgBuyPrice, quantity, type } = req.body;
 
     console.log("POST /me/add - userId:", userId);
@@ -248,6 +249,126 @@ auxiliar.post("/me/add", async (req, res) => {
 
   } catch (err) {
     console.error("ERROR en POST /me/add:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+auxiliar.post("/me/sell", async (req, res) => {
+  try {
+    const userId = (req as any).user.userId;
+    const { symbol, quantity, sellPrice, type } = req.body;
+
+    if (!userId) return res.status(401).json({ error: "Missing user ID" });
+
+    if (!symbol || !quantity || !sellPrice || !type) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // 1️⃣ Buscar usuario + portfolio + assets
+    const user = await UserModel.findById(userId).populate({
+      path: "portfolio",
+      populate: {
+        path: "assets",
+        model: "PortfolioAsset"
+      }
+    });
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const portfolio = user.portfolio as any;
+
+    // 2️⃣ Buscar si el asset existe
+    const asset = portfolio.assets.find((a: any) => {
+      if (a instanceof mongoose.Types.ObjectId) return false;
+      return a.symbol === symbol && a.type === type;
+    });
+
+    if (!asset) {
+      return res.status(404).json({
+        error: `El usuario no tiene ${symbol} (${type}) en el portfolio`
+      });
+    }
+
+    // 3️⃣ Comprobar cantidad suficiente
+    if (asset.quantity < quantity) {
+      return res.status(400).json({
+        error: `No tienes suficientes unidades para vender: tienes ${asset.quantity}, intentas vender ${quantity}`
+      });
+    }
+
+    // 4️⃣ Restar cantidad
+    asset.quantity -= quantity;
+
+    // Si queda en 0 → eliminar asset del portfolio
+    if (asset.quantity === 0) {
+      portfolio.assets = portfolio.assets.filter((a: any) => a._id.toString() !== asset._id.toString());
+      await asset.deleteOne();
+    } else {
+      await asset.save();
+    }
+
+    // 5️⃣ Guardar portfolio actualizado
+    await portfolio.save();
+
+    // 6️⃣ Registrar la transacción SELL
+    const now = new Date();
+    await TransactionModel.create({
+      userId,
+      assetSymbol: symbol,
+      actionType: "SELL",
+      quantity,
+      price: sellPrice,
+      date: {
+        day: now.getDate(),
+        month: now.getMonth() + 1,
+        year: now.getFullYear()
+      }
+    });
+
+    return res.json({
+      success: true,
+      message: "Asset vendido correctamente"
+    });
+
+  } catch (err: any) {
+    console.error("ERROR en /me/sell:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+
+auxiliar.get("/all-data/top-assets", async (req: Request, res: Response) => {
+  try {
+    const STOCK_SYMBOLS = ["AAPL", "MSFT", "GOOGL", "NVDA", "META", "AMZN", "TSLA"];
+
+    const topStocksData = await AssetPriceModel.find({
+      symbol: { $in: STOCK_SYMBOLS },
+      type: "stock"
+    }).sort({ symbol: 1 });
+
+
+    return res.status(200).json({
+      stocks: topStocksData,
+    });
+  } catch (err: any) {
+    console.error("ERROR EN /top-assets:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+auxiliar.get("/all-data/top-crypto", async (req: Request, res: Response) => {
+  try {
+    const CRYPTO_SYMBOLS = ["ETHUSDT", "BTCUSDT", "SOLUSDT"];
+    const topCryptosData = await AssetPriceModel.find({
+      symbol: { $in: CRYPTO_SYMBOLS },
+      type: "crypto"
+    }).sort({ symbol: 1 });
+
+    return res.status(200).json({
+      cryptos: topCryptosData,
+    });
+  } catch (err: any) {
+    console.error("ERROR EN /top-crypto:", err);
     return res.status(500).json({ error: err.message });
   }
 });

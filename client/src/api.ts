@@ -66,3 +66,39 @@ export const getUserPatrimony = async () => {
 
   return res.data.patrimonio;
 };
+
+export const buyAsset = async (symbol: string, quantity: number, price: number, type: string) => {
+  const res = await apiFetch("/me/add", {
+    method: "POST",
+    body: JSON.stringify({
+      symbol,
+      quantity,
+      avgBuyPrice: price,
+      type,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(res.data?.error || "Error buying asset");
+  }
+
+  return res.ok;
+};
+
+export const sellAsset = async (symbol: string, quantity: number, price: number, type: string) => {
+  const res = await apiFetch("/me/sell", {
+    method: "POST",
+    body: JSON.stringify({
+      symbol,
+      quantity,
+      sellPrice: price,
+      type,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(res.data?.error || "Error selling asset");
+  }
+
+  return res.ok;
+};

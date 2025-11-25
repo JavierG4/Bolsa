@@ -41,7 +41,7 @@ describe("E2E - Authentication flow", () => {
   it(
     "Register should work",
     async () => {
-      await driver.get("http://10.6.128.111");
+      await driver.get("http://localhost:5173");
 
       await waitAndClick('a[href="/register"]');
 
@@ -67,7 +67,7 @@ describe("E2E - Authentication flow", () => {
   it (
     "Login should work",
     async () => {
-      await driver.get("http://10.6.128.111");
+      await driver.get("http://localhost:5173");
 
       const header = await driver.wait(
         until.elementLocated(
@@ -105,7 +105,7 @@ describe("E2E - Authentication flow", () => {
   it(
     "Logout should work",
     async () => {
-      await driver.get("http://10.6.128.111");
+      await driver.get("http://localhost:5173");
 
       const header = await driver.wait(
         until.elementLocated(
