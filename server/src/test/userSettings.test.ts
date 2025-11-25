@@ -7,15 +7,21 @@ import { UserModel } from '../models/user.js';
 import { UserSettingsModel } from '../models/userSettings.js';
 import { PortfolioModel } from '../models/portfolio.js';
 
-import '../db/mongoose.js';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+
+let mongoServer: MongoMemoryServer;
 
 describe('UserSettings Routes', () => {
   let settingsId: string;
   let portfolioId: string;
   let userId: string;
   let authToken: string;
+
   
   beforeAll(async () => {
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri);
     const settings = await UserSettingsModel.create({
       currency: 'USD',
       notifications: true,
@@ -68,7 +74,8 @@ describe('UserSettings Routes', () => {
     await UserModel.deleteMany({});
     await PortfolioModel.deleteMany({});
     await UserSettingsModel.deleteMany({});
-    await mongoose.connection.close();
+    await mongoose.disconnect();
+    await mongoServer.stop();
   }, 1000);
 
 

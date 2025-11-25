@@ -5,7 +5,9 @@ import { PortfolioModel } from '../models/portfolio.js'
 import { UserModel } from '../models/user.js'
 import { UserSettingsModel } from '../models/userSettings.js'
 import mongoose from 'mongoose'
-import '../db/mongoose.js'
+import { MongoMemoryServer } from 'mongodb-memory-server';
+
+let mongoServer: MongoMemoryServer;
 
 describe('Portfolio Routes', () => {
   let authToken: string
@@ -13,6 +15,10 @@ describe('Portfolio Routes', () => {
   let portfolioId: string
 
   beforeAll(async () => {
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri);
+
     const settings = await UserSettingsModel.create({
       currency: 'USD',
       notifications: true
@@ -52,7 +58,8 @@ describe('Portfolio Routes', () => {
     await PortfolioModel.deleteMany({})
     await UserModel.deleteMany({})
     await UserSettingsModel.deleteMany({})
-    await mongoose.connection.close()
+    await mongoose.disconnect();
+    await mongoServer.stop();
   })
 
   beforeEach(async () => {

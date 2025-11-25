@@ -6,7 +6,10 @@ import { UserModel } from '../models/user.js'
 import { UserSettingsModel } from '../models/userSettings.js'
 import { PortfolioModel } from '../models/portfolio.js'
 import mongoose from 'mongoose'
-import '../db/mongoose.js'   // Conexión a Mongo REAL
+//import '../db/mongoose.js'   // Conexión a Mongo REAL
+import { MongoMemoryServer } from 'mongodb-memory-server';
+
+let mongoServer: MongoMemoryServer;
 
 describe('Asset Routes', () => {
   let authToken: string
@@ -14,6 +17,10 @@ describe('Asset Routes', () => {
   let assetId: string
 
   beforeAll(async () => {
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri);
+
     // Crear settings
     const settings = await UserSettingsModel.create({
       currency: 'USD',
@@ -54,7 +61,8 @@ describe('Asset Routes', () => {
     await AssetModel.deleteMany({})
     await PortfolioModel.deleteMany({})
     await UserSettingsModel.deleteMany({})
-    await mongoose.connection.close()
+    await mongoose.disconnect();
+    await mongoServer.stop();
   })
 
   beforeEach(async () => {
