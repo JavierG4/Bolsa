@@ -11,6 +11,7 @@ export interface User extends Document {
   portfolio: mongoose.Types.ObjectId | Portfolio;
   settings: ObjectId;
   createdAt: ownDate;
+  watchlistSymbols: string[];
 }
 
 const UserSchema = new Schema<User>({
@@ -69,6 +70,10 @@ const UserSchema = new Schema<User>({
         throw new Error('Year must be a valid year');
       }
     }
+  },
+  watchlistSymbols: {
+    type: [String],
+    required: true
   }
 });
 

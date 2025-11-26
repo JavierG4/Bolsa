@@ -17,6 +17,10 @@ export default defineConfig({
       '/transactions': 'http://localhost:3000',
       '/me': 'http://localhost:3000',
       '/all-data': 'http://localhost:3000',
+      '/myWatchlist': 'http://localhost:3000',
+      '/addSymbol': 'http://localhost:3000',
+      '/removeSymbol': 'http://localhost:3000',
+      '/count': 'http://localhost:3000',
     }
   }
 })

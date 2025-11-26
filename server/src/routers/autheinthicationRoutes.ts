@@ -103,6 +103,9 @@ authenticationRouter.post('/users', async (req, res) => {
     });
     await defaultPortfolio.save();
 
+    // Crear watchlist vacia por defecto
+    const watchlistSymbols: string[] = [];
+
     // Crear el usuario con los IDs generados
     const newUser = new UserModel({
       userName,
@@ -115,6 +118,7 @@ authenticationRouter.post('/users', async (req, res) => {
         month: new Date().getMonth() + 1,
         year: new Date().getFullYear(),
       },
+      watchlistSymbols
     });
 
     await newUser.save();

@@ -59,7 +59,20 @@ describe("E2E - Authentication flow", () => {
       await waitAndType("#password", "12345678");
 
       await waitAndClick("button[type='submit']");
+      
+      const usernameElement = await driver.wait(
+        until.elementLocated(By.xpath("//header//p[@class='text-sm font-medium leading-none']")),
+        5000
+      );
 
+      expect(await usernameElement.getText()).toBe(randomFullName);
+      
+      const dashboard = await driver.wait(
+        until.elementLocated(By.css("h2.text-3xl.font-semibold")),
+        5000
+      );
+
+      expect(await dashboard.getText()).toBe("Dashboard");
     },
     30000
   );
@@ -90,12 +103,12 @@ describe("E2E - Authentication flow", () => {
 
       expect(await dashboard.getText()).toBe("Dashboard");
 
-      const userNameDisplay = await driver.wait(
-        until.elementLocated(By.css("p.text-sm.font-medium.leading-none")),
+      const usernameElement = await driver.wait(
+        until.elementLocated(By.xpath("//header//p[@class='text-sm font-medium leading-none']")),
         5000
       );
 
-      expect(await userNameDisplay.getText()).toBe(randomFullName);
+      expect(await usernameElement.getText()).toBe(randomFullName);
     },
     30000
   );
@@ -128,12 +141,12 @@ describe("E2E - Authentication flow", () => {
 
       expect(await dashboard.getText()).toBe("Dashboard");
 
-      const userNameDisplay = await driver.wait(
-        until.elementLocated(By.css("p.text-sm.font-medium.leading-none")),
+      const usernameElement = await driver.wait(
+        until.elementLocated(By.xpath("//header//p[@class='text-sm font-medium leading-none']")),
         5000
       );
 
-      expect(await userNameDisplay.getText()).toBe(randomFullName);
+      expect(await usernameElement.getText()).toBe(randomFullName);
 
       await waitAndClick('a[href="/login"]');
 

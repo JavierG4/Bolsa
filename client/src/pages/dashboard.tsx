@@ -2,6 +2,14 @@ import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { apiFetch } from "../api";
 
+
+  const navItems = [
+    { name: "Dashboard", path: "/dashboard" },
+    { name: "Portfolio", path: "/portfolio" },
+    { name: "Watchlist", path: "/watchlist" },
+    { name: "Wallet", path: "/wallet" },
+  ];
+
 // ------------------------------
 // Servicios para comprar / vender
 // ------------------------------
@@ -47,7 +55,6 @@ const Dashboard: React.FC = () => {
   const [filterSymbol, setFilterSymbol] = useState<string>("");
   const [allUserHistory, setAllUserHistory] = useState<boolean>(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [errorHistory, setErrorHistory] = useState<string>("");
 
   const [userName, setUserName] = useState<string>("");
   const [userEmail, setUserEmail] = useState<string>("");
@@ -107,7 +114,7 @@ const Dashboard: React.FC = () => {
         setHistoryData(res.ok ? res.data.transaction : []);
       }
     } catch (err) {
-      setErrorHistory("Error fetching history");
+      console.error("Error fetching history: ", err);
     } finally {
       setLoadingHistory(false);
     }
@@ -131,7 +138,7 @@ const Dashboard: React.FC = () => {
         }
       } catch (err) {}
 
-      setTrendingCryptoData(results);
+      setTrendingData(results);
     }
 
     fetchTrending();
@@ -155,7 +162,7 @@ const Dashboard: React.FC = () => {
         }
       } catch (err) {}
 
-      setTrendingData(results);
+      setTrendingCryptoData(results);
     }
 
     fetchTopCrypto();
@@ -205,29 +212,52 @@ const Dashboard: React.FC = () => {
   };
 
   // ======================================================================
+  // RECENTLY ADDED COINS
+  // ======================================================================
+
+  const [recentlyAdded, setRecentlyAdded] = useState<{ name: string; price: number }[]>([]);
+  useEffect(() => {
+    async function fetchRecentlyAdded() {
+      const results: { name: string; price: number }[] = [];
+      try {
+        const res = await apiFetch("/me/recently-added", { method: "GET", credentials: "include" });
+
+        if (res.ok) {
+          const data = await res.data;
+          for (const asset of data.assets) {
+            results.push({ name: asset.name, price: asset.currentPrice ? asset.currentPrice : "NoData" });
+          }
+        }
+      } catch (err) {}
+
+      setRecentlyAdded(results);
+    }
+
+    fetchRecentlyAdded();
+  }, []);
+  
+
+
+  // ======================================================================
   // RENDER
   // ======================================================================
 
   return (
     <div className="min-h-screen bg-black text-white flex relative">
 
-      {/* SIDEBAR */}
       <aside className="hidden md:flex flex-col justify-between bg-black text-white w-64 p-6">
         <div>
           <h1 className="text-xl font-bold mb-8 text-green-400">Trading Web</h1>
           <nav className="space-y-3">
-            {[
-              { name: "Dashboard", path: "/dashboard" },
-              { name: "Portfolio", path: "/portfolio" },
-              { name: "Watchlist", path: "/watchlist" },
-              { name: "Wallet", path: "/wallet" },
-            ].map((item) => (
+            {navItems.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.path}
                 className={({ isActive }) =>
                   `block px-4 py-2 rounded-lg transition ${
-                    isActive ? "bg-white text-black" : "text-gray-300 hover:bg-gray-800"
+                    isActive
+                      ? "bg-white text-black"
+                      : "text-gray-300 hover:bg-gray-800"
                   }`
                 }
               >
@@ -237,10 +267,78 @@ const Dashboard: React.FC = () => {
           </nav>
         </div>
 
-        <NavLink to="/login" className="self-center text-gray-300 hover:text-white transition">
+        {/* LOGOUT */}
+        <NavLink
+          to="/login"
+          className="self-center text-gray-300 hover:text-white transition"
+        >
           Logout
         </NavLink>
       </aside>
+
+      {/* MOBILE TOP BAR */}
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-black text-white flex items-center justify-between px-4 py-3 z-20">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="text-2xl p-1"
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
+
+          <h1 className="text-xl font-bold text-green-400 flex-shrink-0">
+            Trading Web
+          </h1>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-sm font-medium leading-none">{loadingUser ? "Loading..." : userName}</p>
+            <p className="text-xs text-gray-400 leading-none">{userEmail}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* MOBILE SIDEBAR OVERLAY */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* MOBILE SIDEBAR */}
+      {mobileMenuOpen && (
+        <aside className="fixed top-0 left-0 h-full w-64 bg-black text-white p-6 z-40 flex flex-col justify-between animate-slideIn">
+          <nav className="space-y-4">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.path}
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `block px-4 py-2 rounded-lg transition ${
+                    isActive
+                      ? "bg-white text-black"
+                      : "text-gray-300 hover:bg-gray-800"
+                  }`
+                }
+              >
+                {item.name}
+              </NavLink>
+            ))}
+          </nav>
+
+          <NavLink
+            to="/login"
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-gray-300 hover:text-white transition mt-4"
+          >
+            Logout
+          </NavLink>
+        </aside>
+      )}
 
       {/* MAIN */}
       <main className="flex-1 p-6 md:ml-0 mt-16 md:mt-0">
@@ -273,7 +371,7 @@ const Dashboard: React.FC = () => {
                 trendingData.map((item) => (
                   <div key={item.symbol} className="flex justify-between">
                     <span>{item.symbol}</span>
-                    <span className="font-semibold">{item.price}</span>
+                    <span className="font-semibold">${item.price}</span>
                   </div>
                 ))
               ) : (
@@ -285,9 +383,16 @@ const Dashboard: React.FC = () => {
           <div className="bg-[#141414] p-4 rounded-xl">
             <h3 className="font-medium mb-4">⏳ Recently added</h3>
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between"><span>PINO</span><span>$0.000314</span></div>
-              <div className="flex justify-between"><span>STK</span><span>$0.0008765</span></div>
-              <div className="flex justify-between"><span>SYB</span><span>$0.0000001239</span></div>
+              {recentlyAdded.length === 0 ? (
+                <p>No recently added coins</p>
+              ) : (
+                recentlyAdded.map((coin) => (
+                  <div key={coin.name} className="flex justify-between">
+                    <span>{coin.name}</span>
+                    <span>${coin.price}</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </section>
@@ -296,21 +401,19 @@ const Dashboard: React.FC = () => {
         <section className="mb-6">
           <h3 className="text-xl font-medium mb-4">Top Crypto Coins</h3>
           <div className="grid md:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-green-200 to-green-500 rounded-2xl p-6 text-black">
-              <p className="font-semibold">Compound</p>
-              <p className="text-2xl font-bold">$27,308.00</p>
-              <p className="text-sm mt-2">+8250% All time</p>
-            </div>
-            <div className="bg-[#111] rounded-2xl p-6">
-              <p className="font-semibold">ShibaInu</p>
-              <p className="text-2xl font-bold">$0.0008827</p>
-              <p className="text-green-400 text-sm mt-2">+660910%</p>
-            </div>
-            <div className="bg-[#111] rounded-2xl p-6">
-              <p className="font-semibold">ThetaFuel</p>
-              <p className="text-2xl font-bold">$0.04276</p>
-              <p className="text-red-400 text-sm mt-2">-151%</p>
-            </div>
+            {trendingCryptoData.map((crypto, index) => (
+              <div
+                key={crypto.symbol || index}
+                className={`rounded-2xl p-6 ${
+                  index === 0
+                    ? "bg-gradient-to-br from-green-200 to-green-500 text-black"
+                    : "bg-[#111] text-white"
+                }`}
+              >
+                <p className="font-semibold">{crypto.symbol}</p>
+                <p className="text-2xl font-bold">${crypto.price.toLocaleString()}</p>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -448,7 +551,7 @@ const Dashboard: React.FC = () => {
                             : "text-red-400 font-semibold"
                         }
                       >
-                        {item.quantity} units
+                        {item.quantity * item.price} units
                       </span>
                     </div>
                   </div>

@@ -1,13 +1,12 @@
-name: CI tests
+name: Frontend E2E Tests
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
 
 jobs:
-  build:
+  e2e-tests:
     runs-on: ubuntu-latest
 
     strategy:
@@ -15,49 +14,58 @@ jobs:
         node-version: [18.x, 20.x, 22.x, 23.x]
 
     steps:
-    - name: Cloning repo
-      uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
 
-    # ===== SERVER =====
-    - name: Install server dependencies
-      run: |
-        cd server
-        npm ci
+      # ===== SERVER =====
+      - name: Install backend dependencies
+        run: |
+          cd server
+          npm ci
 
-    - name: Run server unit tests
-      run: |
-        cd server
-        npm test
+      - name: Build backend
+        run: |
+          cd server
+          npm run build
 
-    - name: Start backend in test mode
-      run: |
-        cd server
-        npm run test_mode &
-    
-    # ===== CLIENT =====
-    - name: Install client dependencies
-      run: |
-        cd client
-        npm ci
+      - name: Run Unit tests (server)
+        run: |
+          cd server
+          npm test
 
-    - name: Start frontend (Vite)
-      run: |
-        cd client
-        npm run dev &
-    
-    # ===== WAIT =====
-    - name: Wait for backend and frontend
-      run: |
-        npx wait-on http://localhost:3000
-        npx wait-on http://localhost:5173
+      # ===== CLIENT =====
+      - name: Install client dependencies
+        run: |
+          cd client
+          npm ci
 
-    # ===== E2E TESTS =====
-    - name: Run client E2E tests (Selenium)
-      run: |
-        cd client
-        npm run test:e2e
+      # ===== BACKEND + FRONTEND =====
+      - name: Start backend (test mode)
+        run: |
+          cd server
+          NODE_ENV=test MEMORY_DB=true PORT=3000 npm start &
+
+      - name: Build frontend
+        run: |
+          cd client
+          npm run build
+
+      - name: Start frontend (preview)
+        run: |
+          cd client
+          npm run preview &
+
+      - name: Wait for backend and frontend
+        run: |
+          npx wait-on http://localhost:3000
+          npx wait-on http://localhost:5173
+
+      - name: Run E2E tests
+        run: |
+          cd client
+          npm run test:e2e

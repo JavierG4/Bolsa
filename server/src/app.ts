@@ -9,6 +9,7 @@ import { authenticationRouter } from './routers/autheinthicationRoutes.js';
 import { authMiddleware } from './middlewares/authToken.js';
 import { auxiliar } from './routers/auxiliar.js';
 import routerprices from './routers/actualizarassets.js';
+import {watchlistRouter} from './routers/watchlist.js';
 
 export const app = express();
 app.use(express.json());
@@ -23,3 +24,4 @@ app.use(transactionRouter)
 app.use(usersRouter)
 app.use(userSettingsRouter)
 app.use(auxiliar)
+app.use(watchlistRouter)

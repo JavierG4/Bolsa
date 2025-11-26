@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import { Plus, MoreVertical, Edit } from "lucide-react";
 import { apiFetch } from "../api";
 import { getUserPatrimony } from "../api.ts"; 
 
@@ -15,20 +14,9 @@ const Wallet: React.FC = () => {
     { name: "Wallet", path: "/wallet" },
   ];
 
-  const coins = [
-    { name: "Tether", symbol: "USDT", price: "$1.00", change: "+0.22%", changePositive: true, balance: "3,56,000", avgBuy: "$0.98", profit: "+$234" },
-    { name: "Bitcoin", symbol: "BTC", price: "$26,735.59", change: "-5.12%", changePositive: false, balance: "233", avgBuy: "$22,456", profit: "-$234.80" },
-    { name: "SushiSwap", symbol: "SUSHI", price: "$0.8802", change: "+0.6%", changePositive: true, balance: "10,45,688", avgBuy: "$0.8189", profit: "+$34.70" },
-    { name: "SushiSwap", symbol: "SUSHI", price: "$0.8802", change: "+0.6%", changePositive: true, balance: "10,45,688", avgBuy: "$0.8189", profit: "+$34.70" },
-    { name: "SushiSwap", symbol: "SUSHI", price: "$0.8802", change: "+0.6%", changePositive: true, balance: "10,45,688", avgBuy: "$0.8189", profit: "+$34.70" },
-    { name: "SushiSwap", symbol: "SUSHI", price: "$0.8802", change: "+0.6%", changePositive: true, balance: "10,45,688", avgBuy: "$0.8189", profit: "+$34.70" },
-    { name: "SushiSwap", symbol: "SUSHI", price: "$0.8802", change: "+0.6%", changePositive: true, balance: "10,45,688", avgBuy: "$0.8189", profit: "+$34.70" }
-  ];
-
   const [userName, setUserName] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [loadingUser, setLoadingUser] = useState<boolean>(false);
-  const [errorUser, setErrorUser] = useState<string>('');
   
 
   const fetchUserProfile = async () => {
@@ -39,7 +27,7 @@ const Wallet: React.FC = () => {
       });
 
       if (!res.ok) {
-        setErrorUser("Usuario no autenticado");
+        console.error("Usuario no autenticado");
         setLoadingUser(false);
         return;
       }
@@ -48,44 +36,36 @@ const Wallet: React.FC = () => {
       setUserName(data.userName ?? "");
       setUserEmail(data.mail ?? "");
     } catch (err) {
-      setErrorUser("Error de conexión con el servidor");
+      console.error("Error de conexión con el servidor: ", err);
     } finally {
       setLoadingUser(false);
     }
   };
 
   const [walletAssets, setWalletAssets] = useState<any[]>([]);
-  const [loadingAssets, setLoadingAssets] = useState<boolean>(false);
-  const [errorAssets, setErrorAssets] = useState<string>('');
 
   const fetchUserWalletAssets = async () => {
-    setLoadingAssets(true);
     try {
       const res = await apiFetch("/me/assets", {
         method: "GET"
       });
       if (!res.ok) {
-        setErrorAssets("Error fetching wallet assets");
-        setLoadingAssets(false);
+        console.error("Error fetching wallet assets");
         return;
       }
       const data = await res.data;
       setWalletAssets(data.assets || []);
     } catch (err) {
-      setErrorAssets("Server connection error");
-    } finally {
-      setLoadingAssets(false);
+      console.error("Server connection error: ", err);
     }
   };
 
   const [patrimony, setPatrimony] = useState<string | null>(null);
-  const [loadingPatrimony, setLoadingPatrimony] = useState<boolean>(false);
-  const [errorPatrimony, setErrorPatrimony] = useState<string>('');
 
   const fetchUserPatrimony = async () => {
     getUserPatrimony()
       .then((value) => setPatrimony(value))
-      .catch((err) => setErrorPatrimony(err))
+      .catch((err) => console.log("Error obteniendo patrimonio: ", err))
   }
 
   // Obtener datos al montar el componente
@@ -131,19 +111,27 @@ const Wallet: React.FC = () => {
       </aside>
 
       {/* MOBILE TOP BAR */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-black text-white flex items-center gap-3 px-4 py-3 z-20">
-        <button
-          onClick={() => setMobileMenuOpen(true)}
-          className="text-2xl p-1"
-          aria-label="Open menu"
-        >
-          ☰
-        </button>
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-black text-white flex items-center justify-between px-4 py-3 z-20">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="text-2xl p-1"
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
 
-        <h1 className="text-xl font-bold text-green-400 flex-shrink-0">
-          Trading Web
-        </h1>
+          <h1 className="text-xl font-bold text-green-400 flex-shrink-0">
+            Trading Web
+          </h1>
+        </div>
 
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-sm font-medium leading-none">{loadingUser ? "Loading..." : userName}</p>
+            <p className="text-xs text-gray-400 leading-none">{userEmail}</p>
+          </div>
+        </div>
       </div>
 
       {/* MOBILE SIDEBAR OVERLAY */}
@@ -242,7 +230,6 @@ const Wallet: React.FC = () => {
                   <th className="px-4">Quantity</th>
                   <th className="px-4">Avg buy Price</th>
                   <th className="px-4">Profit/Loss</th>
-                  <th className="px-4">Actions</th>
                 </tr>
               </thead>
 
@@ -254,16 +241,11 @@ const Wallet: React.FC = () => {
                       <span>{c.name}</span>
                       <small className="text-gray-400">{c.symbol}</small>
                     </td>
-                    <td className="px-4">{"NoData"}</td>
+                    <td className="px-4">{c.price}</td>
                     <td className="px-4">{c.type.toUpperCase()}</td>
                     <td className="px-4">{c.quantity}</td>
                     <td className="px-4">{c.avgBuyPrice}</td>
                     <td className="px-4">{"NoData"}</td>
-                    <td className="px-4">
-                      <button className="p-2 hover:bg-white/10 rounded-full">
-                        <MoreVertical />
-                      </button>
-                    </td>
                   </tr>
                 ))}
               </tbody>

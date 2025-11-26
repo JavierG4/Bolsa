@@ -49,7 +49,7 @@ export default function Portfolio(): JSX.Element {
       }
     
       const data = await res.data;
-      console.log("User profile data:", data);
+      // console.log("User profile data:", data);
       setUserName(data.userName ?? "");
       setUserEmail(data.mail ?? "");
     } catch (err) {
@@ -58,11 +58,32 @@ export default function Portfolio(): JSX.Element {
       setLoadingUser(false);
     }
   };
+
+  const [assetsFollowed, setAssetsFollowed] = useState<string>('Loading...');
+
+  const fetchUserAssetFollowed = async() => {
+    setAssetsFollowed(true);
+    try {
+      const res = await apiFetch("/count",  {
+        method: 'GET'
+      });
+      if (!res.ok) {
+        console.error("Error al obtener assets seguidos del usuario");
+      }
+      const data = await res.data;
+      setAssetsFollowed(data.count);
+    } catch (err) {
+      console.error("Error al obtener assets seguidos: ", err);
+    } finally {
+      setLoadingUser(false)
+    }
+  };
   
   
   // Obtener perfil al montar el componente
   useEffect(() => {
     fetchUserProfile();
+    fetchUserAssetFollowed();
   }, []);
 
   return (
@@ -100,24 +121,27 @@ export default function Portfolio(): JSX.Element {
       </aside>
 
       {/* MOBILE TOP BAR */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-black text-white flex items-center gap-3 px-4 py-3 z-20">
-        <button
-          onClick={() => setMobileMenuOpen(true)}
-          className="text-2xl p-1"
-          aria-label="Open menu"
-        >
-          ☰
-        </button>
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-black text-white flex items-center justify-between px-4 py-3 z-20">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="text-2xl p-1"
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
 
-        <h1 className="text-xl font-bold text-green-400 flex-shrink-0">
-          Trading Web
-        </h1>
+          <h1 className="text-xl font-bold text-green-400 flex-shrink-0">
+            Trading Web
+          </h1>
+        </div>
 
-        <input
-          placeholder="Search your coins..."
-          className="flex-1 bg-white/10 px-4 py-2 rounded-full text-sm placeholder-gray-400"
-        />
-
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-sm font-medium leading-none">{loadingUser ? "Loading..." : userName}</p>
+            <p className="text-xs text-gray-400 leading-none">{userEmail}</p>
+          </div>
+        </div>
       </div>
 
       {/* MOBILE SIDEBAR OVERLAY */}
@@ -188,7 +212,7 @@ export default function Portfolio(): JSX.Element {
         {/* Header Section */}
         <div className="mb-10">
           <h2 className="text-xl font-semibold mt-4 text-gray-400">Personal</h2>
-          <h3 className="text-3xl font-bold">Javier Gonzalez Brito</h3>
+          <h3 className="text-3xl font-bold">{userName}</h3>
         </div>
 
         {/* Stats Section */}
@@ -213,7 +237,7 @@ export default function Portfolio(): JSX.Element {
 
           <div className="bg-green-500/20 rounded-2xl p-6 text-center shadow-lg">
             <p className="text-gray-400 mb-2">Followed Stocks</p>
-            <p className="text-2xl font-bold">4</p>
+            <p className="text-2xl font-bold">{assetsFollowed}</p>
           </div>
         </section>
 
