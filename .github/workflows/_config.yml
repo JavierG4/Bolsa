@@ -1,4 +1,4 @@
-name: Frontend E2E Tests
+name: CI TESTS
 
 on:
   push:
@@ -49,16 +49,13 @@ jobs:
         run: |
           cd server
           NODE_ENV=test MEMORY_DB=true PORT=3000 npm start &
-
-      - name: Build frontend
-        run: |
-          cd client
-          npm run build
+          sleep 5
 
       - name: Start frontend (preview)
         run: |
           cd client
-          npm run preview &
+          npm start &
+          sleep 5
 
       - name: Wait for backend and frontend
         run: |
