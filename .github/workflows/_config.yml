@@ -55,7 +55,7 @@ jobs:
           # 2. Arrancar Frontend en segundo plano
           echo "Arrancando Frontend..."
           cd ../client
-          npm start &
+          npm run dev -- --host &
 
           # 3. Esperar a que ambos puertos (3000 y 5173) respondan
           echo "Esperando a que los servicios estén listos..."
