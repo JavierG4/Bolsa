@@ -82,7 +82,7 @@ describe('Transaction Routes', () => {
     await UserModel.findByIdAndDelete(testUserId);
     await mongoose.disconnect();
     await mongoServer.stop();
-  }, 1000);
+  },  10000);
 
   beforeEach(async () => {
     // Limpiar transacciones antes de cada test
