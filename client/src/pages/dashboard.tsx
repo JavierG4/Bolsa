@@ -551,7 +551,7 @@ const Dashboard: React.FC = () => {
                             : "text-red-400 font-semibold"
                         }
                       >
-                        {item.quantity * item.price} units
+                        {item.quantity * item.price} USD
                       </span>
                     </div>
                   </div>
