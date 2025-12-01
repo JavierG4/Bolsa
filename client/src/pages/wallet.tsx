@@ -19,6 +19,7 @@ const Wallet: React.FC = () => {
   const [userName, setUserName] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [loadingUser, setLoadingUser] = useState<boolean>(false);
+  const [positiveBalance, setPositiveBalance] = useState<boolean>(true);
   
   const fetchUserProfile = async () => {
     setLoadingUser(true);
@@ -218,6 +219,7 @@ const Wallet: React.FC = () => {
                   <th className="px-4">Quantity</th>
                   <th className="px-4">Avg buy Price</th>
                   <th className="px-4">Profit/Loss</th>
+                  <th className="px-4">%</th>
                 </tr>
               </thead>
 
@@ -240,7 +242,10 @@ const Wallet: React.FC = () => {
                   </tr>
                 ) : (
                   // CASO 3: Renderizado normal
-                  filteredAssets.map((c, i) => (
+                  filteredAssets.map((c, i) => {
+                    const profitLoss = (c.price - c.avgBuyPrice) * c.quantity;
+                    const colorClass = profitLoss >= 0 ? 'text-green-400' : 'text-red-400';
+                    return (
                     <tr key={i} className="border-t border-gray-800 hover:bg-[#1a1a1a] transition">
                       <td className="py-4 px-4 flex items-center gap-3">
                         <div className="w-3 h-3 bg-green-300 rounded-full" />
@@ -250,10 +255,12 @@ const Wallet: React.FC = () => {
                       <td className="px-4">{c.price}</td>
                       <td className="px-4">{c.type.toUpperCase()}</td>
                       <td className="px-4">{c.quantity}</td>
-                      <td className="px-4">{c.avgBuyPrice}</td>
-                      <td className="px-4">{"NoData"}</td>
+                      <td className="px-4">{c.avgBuyPrice.toFixed(2)}</td>
+                      <td className={`px-4 ${colorClass}`}>{((c.price - c.avgBuyPrice) * c.quantity).toFixed(2)}</td>
+                      <td className={`px-4 ${colorClass}`}>{((c.price - c.avgBuyPrice) / c.avgBuyPrice * 100).toFixed(2)}%</td>
                     </tr>
-                  ))
+                    )
+                  })
                 )}
               </tbody>
             </table>
