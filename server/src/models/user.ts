@@ -1,10 +1,12 @@
-import {Document, ObjectId, Schema, model} from 'mongoose';
+import {Document, Model, ObjectId, Schema, model} from 'mongoose';
 
 import {ownDate} from './friendInvite.js';
 import { Portfolio } from './portfolio.js';
 import mongoose from 'mongoose';
 
-export interface User extends Document {
+import bcrypt from 'bcrypt';
+
+export interface IUserProps {
   userName: string;
   mail: string;
   password: string;
@@ -12,12 +14,26 @@ export interface User extends Document {
   settings: ObjectId;
   createdAt: ownDate;
   watchlistSymbols: string[];
+  messages :string[];
 }
 
-const UserSchema = new Schema<User>({
+export interface IUserMethods {
+  comparePassword(candidatePassword: string): Promise<boolean>;
+}
+
+export interface User extends IUserProps, IUserMethods, Document {}
+
+type UserModelType = Model<User, {}, IUserMethods>;
+
+const UserSchema = new Schema<User, UserModelType, IUserMethods>({
   userName: {
     type: String,
     unique: true, 
+    required: true,
+    trim: true
+  },
+    messages: {
+    type: [String],
     required: true,
     trim: true
   },
@@ -77,4 +93,22 @@ const UserSchema = new Schema<User>({
   }
 });
 
-export const UserModel = model<User>('User', UserSchema);
+UserSchema.pre('save', async function (next) {
+  const user = this;
+
+  if (!user.isModified('password')) return next();
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+    next();
+  } catch (error) {
+    return next(error as Error);
+  }
+});
+
+UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+export const UserModel = model<User, UserModelType>('User', UserSchema);

@@ -54,10 +54,10 @@ auxiliar.get("/me/patrimonio", async (req, res) => {
     // console.log("Paso 4: Calculando patrimonio usando precios actuales...");
 
     for (const asset of portfolio.assets) {
-      // console.log("Procesando:", asset.symbol);
+       console.log("Procesando:", asset.symbol);
 
       if (!asset.symbol || !asset.quantity) {
-        // console.log("Asset incompleto:", asset);
+         console.log("Asset incompleto:", asset);
         continue;
       }
 
@@ -65,7 +65,7 @@ auxiliar.get("/me/patrimonio", async (req, res) => {
       const priceEntry = await AssetPriceModel.findOne({ symbol: asset.symbol });
 
       if (!priceEntry) {
-        // console.log(`⚠️ No existe precio actual para ${asset.symbol}, se ignora`);
+         console.log(`⚠️ No existe precio actual para ${asset.symbol}, se ignora`);
         continue;
       }
 
@@ -73,12 +73,12 @@ auxiliar.get("/me/patrimonio", async (req, res) => {
 
       patrimonio += asset.quantity * currentPrice;
 
-      // console.log(
-      //   `✔️ ${asset.symbol}: quantity=${asset.quantity}, price=${currentPrice} → subtotal=${asset.quantity * currentPrice}`
-      // );
+      console.log(
+        `✔️ ${asset.symbol}: quantity=${asset.quantity}, price=${currentPrice} → subtotal=${asset.quantity * currentPrice}`
+      );
     }
 
-    // console.log("Patrimonio final:", patrimonio);
+    console.log("Patrimonio final:", patrimonio);
 
     return res.status(200).json({ patrimonio });
 
@@ -263,7 +263,8 @@ auxiliar.post("/me/sell", async (req, res) => {
 
     if (!userId) return res.status(401).json({ error: "Missing user ID" });
 
-    if (!symbol || !quantity || !sellPrice || !type) {
+    // Price NO es obligatorio al vender
+    if (!symbol || !quantity || !type) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -299,10 +300,23 @@ auxiliar.post("/me/sell", async (req, res) => {
       });
     }
 
-    // 4️⃣ Restar cantidad
+    // 4️⃣ Determinar precio de venta
+    let finalSellPrice = sellPrice;
+
+    // Si NO se envía precio → usar precio actual del asset
+    if (!finalSellPrice) {
+      const priceEntry = await AssetPriceModel.findOne({ symbol, type });
+      if (!priceEntry) {
+        return res.status(404).json({
+          error: `No existe el asset ${symbol} en el tipo ${type}`
+        });
+      }
+      finalSellPrice = priceEntry.price;
+    }
+
+    // 5️⃣ Restar cantidad
     asset.quantity -= quantity;
 
-    // Si queda en 0 → eliminar asset del portfolio
     if (asset.quantity === 0) {
       portfolio.assets = portfolio.assets.filter((a: any) => a._id.toString() !== asset._id.toString());
       await asset.deleteOne();
@@ -310,17 +324,16 @@ auxiliar.post("/me/sell", async (req, res) => {
       await asset.save();
     }
 
-    // 5️⃣ Guardar portfolio actualizado
     await portfolio.save();
 
-    // 6️⃣ Registrar la transacción SELL
+    // 6️⃣ Registrar transacción SELL
     const now = new Date();
     await TransactionModel.create({
       userId,
       assetSymbol: symbol,
       actionType: "SELL",
       quantity,
-      price: sellPrice,
+      price: finalSellPrice,
       date: {
         day: now.getDate(),
         month: now.getMonth() + 1,
@@ -338,6 +351,7 @@ auxiliar.post("/me/sell", async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
+
 
 auxiliar.get("/me/recently-added", async (req, res) => {
   try {

@@ -441,13 +441,16 @@ const Dashboard: React.FC = () => {
                 className="w-full bg-white/5 px-4 py-2 rounded-lg"
               />
 
-              <input
-                type="number"
-                placeholder="Price:"
-                value={addPrice}
-                onChange={(e) => setAddPrice(e.target.value)}
-                className="w-full bg-white/5 px-4 py-2 rounded-lg"
-              />
+              {/* SOLO mostrar el precio cuando sea BUY */}
+              {addAction === "BUY" && (
+                <input
+                  type="number"
+                  placeholder="Price:"
+                  value={addPrice}
+                  onChange={(e) => setAddPrice(e.target.value)}
+                  className="w-full bg-white/5 px-4 py-2 rounded-lg"
+                />
+              )}
 
               <select
                 value={addType}

@@ -102,3 +102,7 @@ export const sellAsset = async (symbol: string, quantity: number, price: number,
 
   return res.ok;
 };
+
+export async function getUserTransactions() {
+  return apiFetch("/transactions", { method: "GET" });
+}

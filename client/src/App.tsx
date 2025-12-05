@@ -7,6 +7,7 @@ import Settings from "./pages/settings"
 import Watchlist from "./pages/watchlist";
 import Prueba from "./pages/prueba";
 import Wallet from "./pages/wallet";
+import Help from "./pages/help";
 
 const App: React.FC = () => {
   return (
@@ -23,6 +24,7 @@ const App: React.FC = () => {
         <Route path="/watchlist" element={<Watchlist/>} />
         <Route path="/wallet" element={<Wallet/>} />
         <Route path="/prueba" element={<Prueba/>} />
+        <Route path="/help" element={<Help/>} />
 
         {/* Si se mete otra URL no existente */}
         <Route path="*" element={<h1 className="text-center mt-10 text-xl">404 - Page Not Found</h1>} />

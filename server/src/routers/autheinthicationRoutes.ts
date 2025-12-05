@@ -30,13 +30,13 @@ authenticationRouter.post('/login', async (req, res) => {
   try {
     const user = await UserModel.findOne({ mail: email });
     if (!user) {
-      return res.status(404).send('User not found');
+      return res.status(404).send('Invalid credentials');
     }
-    // Possible password verification (commented out)
-    // const isMatch = await user.comparePassword(password);
-    // if (!isMatch) {
-    //   return res.status(401).send('Invalid password');
-    // }
+    const isMatch = await user.comparePassword(password);
+    
+    if (!isMatch) {
+      return res.status(404).send('Invalid credentials');
+    }
     const token = jwt.sign({ 
       userId: user._id.toString(),
       userMail: email
@@ -51,7 +51,7 @@ authenticationRouter.post('/login', async (req, res) => {
     });
     return res.cookie('access_token', token, {
       httpOnly: true,
-      maxAge: 3600000, // 1 hour
+      maxAge: 3600000,
     }).cookie('refresh_token', refreshToken, {
       httpOnly: true, 
       maxAge: 7 * 24 * 60 * 60 * 1000
@@ -105,6 +105,7 @@ authenticationRouter.post('/users', async (req, res) => {
 
     // Crear watchlist vacia por defecto
     const watchlistSymbols: string[] = [];
+    const messages: string[] = ["Welcome " + userName];
 
     // Crear el usuario con los IDs generados
     const newUser = new UserModel({
@@ -118,13 +119,18 @@ authenticationRouter.post('/users', async (req, res) => {
         month: new Date().getMonth() + 1,
         year: new Date().getFullYear(),
       },
-      watchlistSymbols
+      watchlistSymbols,
+      messages
     });
 
     await newUser.save();
     return res.status(201).json({
       message: 'User created successfully',
-      user: newUser,
+      user: {
+        id: newUser._id,
+        userName: newUser.userName,
+        mail: newUser.mail,
+      }
     });
   } catch (err) {
     console.error(err);

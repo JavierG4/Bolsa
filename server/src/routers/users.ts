@@ -10,34 +10,6 @@ const REFRESH_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
 export const usersRouter = express.Router();
 
-/**
- * @route POST /users
- * @summary Create a new user
- * @param req.body - User data
- * @returns 201 - User created successfully
- * @returns 400 - Bad request (missing user data)
- * @returns 409 - Conflict (user with the same userName already exists)
- * @returns 500 - Server error
- */
-// usersRouter.post('/users', async (req, res) => {
-//   if(!req.body) {
-//     res.status(400).send('User data must be provided in the request body');
-//     return;
-//   }
-//   try {
-//     const user = new UserModel(req.body);
-//     const filter = req.body.userName ? { userName: req.body.userName } : {};
-//     const existingUser = await UserModel.find(filter);
-//     if (existingUser.length !== 0) {
-//       res.status(409).send('User with this userName already exists');
-//     } else {
-//       await user.save();
-//       res.status(201).send(user);
-//     }
-//   } catch (err) {
-//     res.status(500).send({error: err.message});
-//   }
-// });
 
 usersRouter.post('/logout', (req, res) => {
   return res.clearCookie('access_token').

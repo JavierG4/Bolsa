@@ -24,7 +24,7 @@ const LoginPage: React.FC = () => {
       console.log('Logged in user:', user);
       window.location.href = '/dashboard';
     } catch (err: any) {
-      setError(err.message);
+      setError("Invalid email or password");
     }
   };
 
