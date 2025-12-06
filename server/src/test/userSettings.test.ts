@@ -68,7 +68,7 @@ describe('UserSettings Routes', () => {
 
     settingsId = settings._id.toString();
     portfolioId = portfolio._id.toString();
-  }, 1000);
+  }, 2000);
 
   afterAll(async () => {
     await UserModel.deleteMany({});

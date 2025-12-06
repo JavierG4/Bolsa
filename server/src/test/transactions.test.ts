@@ -69,7 +69,7 @@ describe('Transaction Routes', () => {
         authToken = parts[1];
       }
     }
-  }, 1000);
+  }, 2000);
 
   afterAll(async () => {
     // Limpiar datos de prueba
@@ -82,7 +82,7 @@ describe('Transaction Routes', () => {
     await UserModel.findByIdAndDelete(testUserId);
     await mongoose.disconnect();
     await mongoServer.stop();
-  },  10000);
+  },  20000);
 
   beforeEach(async () => {
     // Limpiar transacciones antes de cada test

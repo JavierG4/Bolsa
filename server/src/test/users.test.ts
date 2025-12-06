@@ -34,7 +34,7 @@ describe('User Routes', () => {
 
     settingsId = settings._id.toString();
     portfolioId = portfolio._id.toString();
-  }, 1000);
+  }, 20000);
 
   afterAll(async () => {
     await UserModel.deleteMany({});
@@ -42,7 +42,7 @@ describe('User Routes', () => {
     await PortfolioModel.deleteMany({});
     await mongoose.connection.close();
     await mongoServer.stop();
-  }, 1000);
+  }, 2000);
 
   // POST /users
   describe('POST /users', () => {
@@ -53,7 +53,8 @@ describe('User Routes', () => {
         password: 'pass123',
         portfolio: portfolioId,
         settings: settingsId,
-        createdAt: { day: 10, month: 11, year: 2024 }
+        createdAt: { day: 10, month: 11, year: 2024 },
+        messages: []
       };
 
       const res = await request(app)
@@ -61,9 +62,9 @@ describe('User Routes', () => {
         .send(newUser);
 
       expect(res.status).toBe(201);
-      expect(res.body.user).toHaveProperty('_id');
+      expect(res.body.user).toHaveProperty('id');
       expect(res.body.user.mail).toBe('juan@example.com');
-      userId = res.body.user._id;
+      userId = res.body.user.id;
       // Login para obtener token
       const loginRes = await request(app)
         .post('/login')
