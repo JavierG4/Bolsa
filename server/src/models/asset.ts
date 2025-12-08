@@ -6,7 +6,10 @@ export interface IAssetPrice extends Document {
   type: "stock" | "crypto";
   price: number;
   timestamp: Date;
+  // Convertir en una lista de [number,Date] para poder hacer las tablas
+  // Para eso cambiar en get patrimonio
 }
+
 
 const AssetPriceSchema = new Schema<IAssetPrice>({
   name: { type: String, required: true },

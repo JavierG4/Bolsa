@@ -1,6 +1,5 @@
 
 import dotenv from "dotenv";
-import axios from 'axios'
 import { ownDate } from "../models/friendInvite.js";
 
 dotenv.config();

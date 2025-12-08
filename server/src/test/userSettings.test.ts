@@ -12,9 +12,8 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 let mongoServer: MongoMemoryServer;
 
 describe('UserSettings Routes', () => {
-  let settingsId: string;
-  let portfolioId: string;
   let userId: string;
+  let settingsId: string;
   let authToken: string;
 
   
@@ -26,6 +25,8 @@ describe('UserSettings Routes', () => {
       currency: 'USD',
       notifications: true,
     });
+
+    settingsId = settings._id.toString();
 
     const portfolio = await PortfolioModel.create({
       assets: [],
@@ -45,6 +46,7 @@ describe('UserSettings Routes', () => {
         year: 2025
       }
     });
+
     userId = testUser._id.toString();
     
     // Login para obtener token
@@ -57,17 +59,7 @@ describe('UserSettings Routes', () => {
 
     // Extraer token de la cookie
     const cookies = loginRes.headers['set-cookie'];
-    if (cookies) {
-      const cookieArray = Array.isArray(cookies) ? cookies : [cookies];
-      const tokenCookie = cookieArray.find((cookie: string) => cookie.startsWith('access_token='));
-      if (tokenCookie) {
-        const parts = tokenCookie.split(';')[0].split('=');
-        authToken = parts[1];
-      }
-    }
-
-    settingsId = settings._id.toString();
-    portfolioId = portfolio._id.toString();
+    authToken = cookies[0].split('=')[1].split(';')[0];
   }, 2000);
 
   afterAll(async () => {
