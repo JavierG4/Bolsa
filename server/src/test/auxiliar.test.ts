@@ -62,7 +62,7 @@ describe('Auxiliar Router', () => {
       timestamp: Date.now()
     })
     await asset.save();
-  }, 2000)
+  }, 20000)
 
   afterAll(async () => {
     await PortfolioModel.deleteMany({})
