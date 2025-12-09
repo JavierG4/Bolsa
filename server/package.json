@@ -10,7 +10,7 @@
     "test_mode": "env-cmd -f ./config/test.env node dist/index.js",
     "test": "env-cmd -f ./config/test.env vitest run",
     "test:unit": "env-cmd -f ./config/test.env vitest run src/test/*",
-    "coverage": "env-cmd -f ./config/test.env vitest run --coverage --coverage.include **/src/*",
+    "coverage": "env-cmd -f ./config/test.env vitest run --coverage --coverage.include \"**/src/*\"",
     "bd": "node dist/db/mongoose.js",
     "prueba_API": "node dist/services/alphadvantageAPI.js"
   },
