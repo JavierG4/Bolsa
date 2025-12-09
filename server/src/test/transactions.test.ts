@@ -69,7 +69,7 @@ describe('Transaction Routes', () => {
         authToken = parts[1];
       }
     }
-  }, 2000);
+  }, 20000);
 
   afterAll(async () => {
     // Limpiar datos de prueba

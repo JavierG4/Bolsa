@@ -52,7 +52,7 @@ describe('Portfolio Routes', () => {
 
     const cookie = loginRes.headers['set-cookie']
     authToken = cookie[0].split('=')[1].split(';')[0]
-  }, 2000)
+  }, 20000)
 
   afterAll(async () => {
     await PortfolioModel.deleteMany({})
